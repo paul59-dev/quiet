@@ -32,12 +32,11 @@ L'application est conçue pour récompenser la régularité et punir la néglige
 
 L'application est contenue dans un seul fichier HTML, ce qui la rend extrêmement légère et privée.
 
-1.  Copie le code HTML fourni.
-2.  Enregistre-le dans un fichier nommé `index.html`.
-3.  Ouvre ce fichier avec n'importe quel navigateur (Chrome, Safari, Firefox).
+1.  Allez sur https://paul59-dev.github.io/quiet/
 
 ### Sur Mobile (Mode App)
 Pour une expérience optimale, tu peux l'installer comme une application :
+* **Lien du site :** https://paul59-dev.github.io/quiet/
 *   **iOS (Safari) :** Partager -> "Sur l'écran d'accueil".
 *   **Android (Chrome) :** Menu (3 points) -> "Installer l'application".
 
