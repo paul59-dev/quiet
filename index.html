@@ -3,17 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- Indique au navigateur que c'est une application mobile -->
-    <!-- Pour Chrome, Android et Firefox -->
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#0f172a"> <!-- Couleur de la barre de statut -->
+    <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Eveil">
-
-    <!-- Icône de l'application (optionnel, tu peux mettre un lien vers une image) -->
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3069/3069172.png">
-
     <link rel="manifest" href="manifest.json">
 
     <title>EVEIL - Discipline & Ladder</title>
@@ -26,6 +21,7 @@
             --warning: #f59e0b;
             --danger: #ef4444;
             --text: #f8fafc;
+            --prestige: #f43f5e;
         }
 
         body {
@@ -46,24 +42,12 @@
             gap: 20px;
         }
 
-        /* --- LAYOUT PC (Ecrans > 850px) --- */
         @media (min-width: 850px) {
-            .container {
-                flex-direction: row;
-                align-items: flex-start;
-            }
-            .sidebar {
-                width: 380px;
-                position: sticky;
-                top: 20px;
-                flex-shrink: 0;
-            }
-            .main-content {
-                flex-grow: 1;
-            }
+            .container { flex-direction: row; align-items: flex-start; }
+            .sidebar { width: 380px; position: sticky; top: 20px; flex-shrink: 0; }
+            .main-content { flex-grow: 1; }
         }
 
-        /* --- CARTES --- */
         .card {
             background: var(--card);
             border-radius: 20px;
@@ -77,12 +61,31 @@
         #rank-medal { font-size: 5.5rem; display: block; margin: 10px 0; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1)); }
         #rank-name { font-weight: 900; font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px; }
         .lp-display { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin: 5px 0; }
+        
+        /* Style Prestige */
+        .prestige-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.6);
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-top: 5px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        /* Quand le prestige > 0, on met de la couleur */
+        .prestige-active {
+            background: linear-gradient(45deg, #f43f5e, #fb923c);
+            color: white;
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+            border: none;
+        }
 
-        /* BARRE DE PROGRESSION */
         .progress-container { background: rgba(0,0,0,0.3); border-radius: 20px; height: 12px; margin: 15px 0; overflow: hidden; }
         #progress-bar { background: linear-gradient(90deg, var(--primary), var(--success)); height: 100%; width: 0%; transition: width 0.6s ease; }
 
-        /* EXERCICES */
         .exo-list { display: flex; flex-direction: column; gap: 10px; }
         .exo-item {
             background: rgba(255,255,255,0.03);
@@ -97,28 +100,32 @@
         .exo-item.checked { border-color: var(--success); background: rgba(34, 197, 94, 0.1); }
         .exo-item input { width: 22px; height: 22px; margin-right: 15px; accent-color: var(--success); }
 
-        /* CALENDRIER */
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
         .day { aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
         .day.green { background: var(--success); box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
         .day.orange { background: var(--warning); }
         .day.today { border: 2px solid var(--primary); font-weight: bold; }
 
-        /* BOUTONS */
         .btn { padding: 12px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: 0.3s; }
         .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 100%; }
-        .btn-danger:hover { background: var(--danger); color: white; }
-        .btn-save { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid rgba(255,255,255,0.1); }
+        .btn-prestige { background: var(--prestige); color: white; width: 100%; margin-top: 10px; display: none; animation: pulse 2s infinite; }
         
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); box-shadow: 0 0 20px rgba(244, 63, 94, 0.6); }
+            100% { transform: scale(1); }
+        }
+
+        .btn-save { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid rgba(255,255,255,0.1); }
         .timer-box { background: rgba(0,0,0,0.2); border-radius: 15px; padding: 15px; margin: 20px 0; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- BARRE LATERALE (HAUT SUR MOBILE) -->
     <div class="sidebar">
         <div class="card rank-header">
+            <div id="prestige-area"></div>
             <span id="rank-medal">⚪</span>
             <div id="rank-name">NON CLASSÉ</div>
             <div class="lp-display"><span id="lp-val">0</span> LP</div>
@@ -127,6 +134,8 @@
                 <div id="progress-bar"></div>
             </div>
             <div id="next-rank-label" style="font-size: 0.75rem; opacity: 0.6;">Objectif : 50 LP</div>
+
+            <button id="prestige-btn" class="btn btn-prestige" onclick="passPrestige()">PASSER AU PRESTIGE SUIVANT ✨</button>
 
             <div class="timer-box">
                 <div id="tree-icon" style="font-size: 3rem;">🌱</div>
@@ -143,23 +152,18 @@
         </div>
     </div>
 
-    <!-- CONTENU PRINCIPAL (EXOS & CALENDRIER) -->
     <div class="main-content">
         <div class="card">
             <h2 style="margin: 0 0 20px 0; font-size: 1.4rem;">🏋️ Entraînement (<span id="exo-count" style="color: var(--primary);">0/10</span>)</h2>
             <div class="exo-list" id="exo-list"></div>
             <p style="font-size: 0.75rem; color: var(--danger); margin-top: 15px; text-align: center;">
-                Chaque exercice non fait à minuit retire 1 LP du score.
+                Chaque exercice non fait à minuit retire 1 LP.
             </p>
         </div>
 
         <div class="card">
             <h2 style="margin: 0 0 20px 0; font-size: 1.4rem;">📅 Historique mensuel</h2>
             <div class="cal-grid" id="calendar"></div>
-            <div style="margin-top: 15px; display: flex; gap: 15px; font-size: 0.7rem; justify-content: center; opacity: 0.5;">
-                <span><b style="color:var(--success)">●</b> 10/10</span>
-                <span><b style="color:var(--warning)">●</b> 5+/10</span>
-            </div>
         </div>
     </div>
 </div>
@@ -177,41 +181,36 @@
 
     let state = JSON.parse(localStorage.getItem('eveil_v6_final')) || {
         points: 0,
+        prestige: 0,
         startDate: new Date().getTime(),
         sportHistory: {},
         lastCheckDate: new Date().toISOString().split('T')[0],
         lastSeasonMonth: new Date().getMonth()
     };
 
+    if (state.prestige === undefined) state.prestige = 0;
+
     function save() { localStorage.setItem('eveil_v6_final', JSON.stringify(state)); }
 
-    // --- LOGIQUE SAISON & DECAY ---
     function temporalChecks() {
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
 
-        // 1. Reset Saison (Mensuel)
         if (state.lastSeasonMonth !== now.getMonth()) {
             state.points = Math.max(0, state.points - 500);
             state.lastSeasonMonth = now.getMonth();
-            alert(`🌦 NOUVELLE SAISON : Prélèvement de 500 LP. Reprouve ta force !`);
         }
 
-        // 2. Pénalité quotidienne
         if (state.lastCheckDate !== todayStr) {
             const yesterday = state.lastCheckDate;
             const done = (state.sportHistory[yesterday] || []).length;
             const missed = 10 - done;
-            if (missed > 0) {
-                state.points = Math.max(0, state.points - missed);
-                alert(`⚠️ Hier : ${missed} exercice(s) manqué(s). -${missed} LP.`);
-            }
+            if (missed > 0) state.points = Math.max(0, state.points - missed);
             state.lastCheckDate = todayStr;
         }
         save();
     }
 
-    // --- INTERFACE ---
     function updateUI() {
         let cur = RANKS[0], next = RANKS[1];
         for (let r of RANKS) { if (state.points >= r.min) { cur = r; next = RANKS[RANKS.indexOf(r)+1] || r; } }
@@ -221,10 +220,28 @@
         document.getElementById('rank-name').style.color = cur.color;
         document.getElementById('lp-val').innerText = state.points;
 
+        // --- AFFICHAGE PRESTIGE ---
+        const pArea = document.getElementById('prestige-area');
+        // On affiche le badge même si prestige est à 0
+        const activeClass = state.prestige > 0 ? "prestige-active" : "";
+        pArea.innerHTML = `<div class="prestige-badge ${activeClass}">PRESTIGE ${state.prestige}</div>`;
+
+        // Bouton visible seulement au rang Légende (1000 LP)
+        document.getElementById('prestige-btn').style.display = state.points >= 1000 ? "block" : "none";
+
         const range = next.min - cur.min;
         const prog = next === cur ? 100 : ((state.points - cur.min) / range) * 100;
         document.getElementById('progress-bar').style.width = `${prog}%`;
         document.getElementById('next-rank-label').innerText = next === cur ? "RANG MAX ATTEINT" : `Objectif ${next.name} : ${next.min} LP`;
+    }
+
+    function passPrestige() {
+        if(confirm("Passer au niveau de Prestige supérieur ? Tes LP reviendront à 0.")) {
+            state.prestige++;
+            state.points = 0;
+            save();
+            location.reload();
+        }
     }
 
     function renderExos() {
@@ -272,7 +289,6 @@
         if(d >= 30) icon.innerText = "🌸"; else if(d >= 15) icon.innerText = "🌳"; else if(d >= 7) icon.innerText = "🌿"; else icon.innerText = "🌱";
     }
 
-    // --- SAUVEGARDE ---
     function exportData() {
         const blob = new Blob([JSON.stringify(state)], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
