@@ -9,7 +9,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Eveil">
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3069/3069172.png">
-    <link rel="manifest" href="manifest.json">
 
     <title>EVEIL - Discipline & Ladder</title>
     <style>
@@ -62,7 +61,6 @@
         #rank-name { font-weight: 900; font-size: 1.8rem; text-transform: uppercase; letter-spacing: 2px; }
         .lp-display { font-size: 1.2rem; font-weight: bold; color: var(--primary); margin: 5px 0; }
         
-        /* Style Prestige */
         .prestige-badge {
             display: inline-block;
             background: rgba(255,255,255,0.05);
@@ -75,7 +73,6 @@
             border: 1px solid rgba(255,255,255,0.1);
         }
         
-        /* Quand le prestige > 0, on met de la couleur */
         .prestige-active {
             background: linear-gradient(45deg, #f43f5e, #fb923c);
             color: white;
@@ -89,26 +86,99 @@
         .exo-list { display: flex; flex-direction: column; gap: 10px; }
         .exo-item {
             background: rgba(255,255,255,0.03);
-            padding: 15px;
+            padding: 12px 15px;
             border-radius: 15px;
             display: flex;
             align-items: center;
-            cursor: pointer;
             border: 2px solid transparent;
             transition: 0.2s;
         }
         .exo-item.checked { border-color: var(--success); background: rgba(34, 197, 94, 0.1); }
-        .exo-item input { width: 22px; height: 22px; margin-right: 15px; accent-color: var(--success); }
+        
+        .exo-content {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .exo-content input { width: 22px; height: 22px; margin-right: 15px; accent-color: var(--success); cursor: pointer; flex-shrink: 0; }
+        
+        .exo-text {
+            flex-grow: 1;
+            padding: 5px;
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .exo-text[contenteditable="true"] {
+            background: rgba(255,255,255,0.1);
+            cursor: text;
+            white-space: normal;
+            border: 1px solid var(--primary);
+        }
+
+        .btn-edit {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 10px;
+            opacity: 0.4;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+        .btn-edit:hover, .exo-item:hover .btn-edit { opacity: 1; }
+        .btn-edit.active { background: var(--success); opacity: 1; }
+
+        .cal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .cal-nav-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-        .day { aspect-ratio: 1; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
-        .day.green { background: var(--success); box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
-        .day.orange { background: var(--warning); }
+        .day { 
+            aspect-ratio: 1; 
+            background: rgba(255,255,255,0.05); 
+            border-radius: 6px; 
+            font-size: 0.7rem; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            position: relative;
+        }
+        
+        .day-reset { border: 1px dashed var(--danger); background: rgba(239, 68, 68, 0.05); }
+        .reset-tag { font-size: 0.5rem; color: var(--danger); font-weight: bold; margin-top: 2px; }
+
+        .day.green { background: var(--success); color: white; }
+        .day.orange { background: var(--warning); color: white; }
         .day.today { border: 2px solid var(--primary); font-weight: bold; }
 
-        .btn { padding: 12px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: 0.3s; }
+        .btn { padding: 12px; border-radius: 12px; border: none; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px; }
         .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); width: 100%; }
-        .btn-prestige { background: var(--prestige); color: white; width: 100%; margin-top: 10px; display: none; animation: pulse 2s infinite; }
+        .btn-prestige { background: var(--prestige); color: white; width: 100%; display: none; animation: pulse 2s infinite; }
         
         @keyframes pulse {
             0% { transform: scale(1); }
@@ -154,22 +224,27 @@
 
     <div class="main-content">
         <div class="card">
-            <h2 style="margin: 0 0 20px 0; font-size: 1.4rem;">🏋️ Entraînement (<span id="exo-count" style="color: var(--primary);">0/10</span>)</h2>
+            <h2 style="margin: 0 0 20px 0; font-size: 1.4rem;">🏋️ Mes Exercices (<span id="exo-count" style="color: var(--primary);">0/10</span>)</h2>
             <div class="exo-list" id="exo-list"></div>
-            <p style="font-size: 0.75rem; color: var(--danger); margin-top: 15px; text-align: center;">
-                Chaque exercice non fait à minuit retire 1 LP.
-            </p>
         </div>
 
         <div class="card">
-            <h2 style="margin: 0 0 20px 0; font-size: 1.4rem;">📅 Historique mensuel</h2>
+            <div class="cal-header">
+                <button class="cal-nav-btn" onclick="changeMonth(-1)">❮</button>
+                <h2 id="month-label" style="margin:0; font-size: 1.2rem; text-transform: capitalize;">Mois</h2>
+                <button class="cal-nav-btn" onclick="changeMonth(1)">❯</button>
+            </div>
             <div class="cal-grid" id="calendar"></div>
+            <p style="font-size: 0.65rem; color: var(--danger); margin-top: 10px; text-align: center; opacity: 0.8;">
+                Le 1er de chaque mois : Fin de saison (-200 LP).
+            </p>
         </div>
     </div>
 </div>
 
 <script>
-    const EXOS = ["20 Pompes", "30 Squats", "1min Gainage", "40 Jumping Jacks", "15 Burpees", "20 Fentes", "30 Abdos", "10 Tractions", "2min Course", "10mn Étirements"];
+    const DEFAULT_EXOS = ["20 Pompes", "30 Squats", "1min Gainage", "40 Jumping Jacks", "15 Burpees", "20 Fentes", "30 Abdos", "10 Tractions", "2min Course", "10mn Étirements"];
+    
     const RANKS = [
         { name: "Non Classé", min: 0, icon: "⚪", color: "#94a3b8" },
         { name: "Bronze", min: 50, icon: "🥉", color: "#cd7f32" },
@@ -180,27 +255,27 @@
     ];
 
     let state = JSON.parse(localStorage.getItem('eveil_v6_final')) || {
-        points: 0,
-        prestige: 0,
+        points: 0, prestige: 0,
         startDate: new Date().getTime(),
         sportHistory: {},
         lastCheckDate: new Date().toISOString().split('T')[0],
-        lastSeasonMonth: new Date().getMonth()
+        lastSeasonMonth: new Date().getMonth(),
+        customExos: [...DEFAULT_EXOS]
     };
 
-    if (state.prestige === undefined) state.prestige = 0;
+    if (!state.customExos) state.customExos = [...DEFAULT_EXOS];
+
+    let currentViewDate = new Date();
 
     function save() { localStorage.setItem('eveil_v6_final', JSON.stringify(state)); }
 
     function temporalChecks() {
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
-
         if (state.lastSeasonMonth !== now.getMonth()) {
-            state.points = Math.max(0, state.points - 500);
+            state.points = Math.max(0, state.points - 200);
             state.lastSeasonMonth = now.getMonth();
         }
-
         if (state.lastCheckDate !== todayStr) {
             const yesterday = state.lastCheckDate;
             const done = (state.sportHistory[yesterday] || []).length;
@@ -214,46 +289,79 @@
     function updateUI() {
         let cur = RANKS[0], next = RANKS[1];
         for (let r of RANKS) { if (state.points >= r.min) { cur = r; next = RANKS[RANKS.indexOf(r)+1] || r; } }
-
         document.getElementById('rank-medal').innerText = cur.icon;
         document.getElementById('rank-name').innerText = cur.name;
         document.getElementById('rank-name').style.color = cur.color;
         document.getElementById('lp-val').innerText = state.points;
-
-        // --- AFFICHAGE PRESTIGE ---
         const pArea = document.getElementById('prestige-area');
-        // On affiche le badge même si prestige est à 0
         const activeClass = state.prestige > 0 ? "prestige-active" : "";
         pArea.innerHTML = `<div class="prestige-badge ${activeClass}">PRESTIGE ${state.prestige}</div>`;
-
-        // Bouton visible seulement au rang Légende (1000 LP)
         document.getElementById('prestige-btn').style.display = state.points >= 1000 ? "block" : "none";
-
         const range = next.min - cur.min;
         const prog = next === cur ? 100 : ((state.points - cur.min) / range) * 100;
         document.getElementById('progress-bar').style.width = `${prog}%`;
-        document.getElementById('next-rank-label').innerText = next === cur ? "RANG MAX ATTEINT" : `Objectif ${next.name} : ${next.min} LP`;
-    }
-
-    function passPrestige() {
-        if(confirm("Passer au niveau de Prestige supérieur ? Tes LP reviendront à 0.")) {
-            state.prestige++;
-            state.points = 0;
-            save();
-            location.reload();
-        }
+        document.getElementById('next-rank-label').innerText = next === cur ? "RANG MAX" : `Objectif ${next.name} : ${next.min} LP`;
     }
 
     function renderExos() {
         const t = new Date().toISOString().split('T')[0];
         const done = state.sportHistory[t] || [];
-        document.getElementById('exo-list').innerHTML = EXOS.map((ex, i) => `
-            <div class="exo-item ${done.includes(i) ? 'checked' : ''}" onclick="toggleExo(${i})">
-                <input type="checkbox" ${done.includes(i) ? 'checked' : ''} onchange="return false;">
-                <span>${ex}</span>
+        const container = document.getElementById('exo-list');
+        container.innerHTML = state.customExos.map((ex, i) => `
+            <div class="exo-item ${done.includes(i) ? 'checked' : ''}" id="item-${i}">
+                <div class="exo-content">
+                    <input type="checkbox" ${done.includes(i) ? 'checked' : ''} onclick="toggleExo(${i})">
+                    <div class="exo-text" id="text-${i}" onclick="if(this.contentEditable !== 'true') toggleExo(${i})" 
+                         onblur="finishEdit(${i})" onkeydown="checkEnter(event, ${i})">${ex}</div>
+                </div>
+                <button class="btn-edit" id="btn-edit-${i}" onclick="enableEdit(${i})">✏️</button>
             </div>
         `).join('');
         document.getElementById('exo-count').innerText = `${done.length}/10`;
+    }
+
+    function enableEdit(index) {
+        const textElem = document.getElementById(`text-${index}`);
+        const btn = document.getElementById(`btn-edit-${index}`);
+        
+        textElem.contentEditable = "true";
+        textElem.focus();
+        // Placer le curseur à la fin
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(textElem);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        
+        btn.innerText = "✅";
+        btn.classList.add('active');
+        btn.onclick = () => finishEdit(index);
+    }
+
+    function finishEdit(index) {
+        const textElem = document.getElementById(`text-${index}`);
+        const btn = document.getElementById(`btn-edit-${index}`);
+        const newText = textElem.innerText.trim();
+        
+        if (newText !== "") {
+            state.customExos[index] = newText;
+            save();
+        } else {
+            textElem.innerText = state.customExos[index];
+        }
+        
+        textElem.contentEditable = "false";
+        btn.innerText = "✏️";
+        btn.classList.remove('active');
+        btn.onclick = () => enableEdit(index);
+    }
+
+    function checkEnter(e, index) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            finishEdit(index);
+        }
     }
 
     function toggleExo(i) {
@@ -269,15 +377,27 @@
         save(); renderExos(); renderCalendar(); updateUI();
     }
 
+    function changeMonth(dir) {
+        currentViewDate.setMonth(currentViewDate.getMonth() + dir);
+        renderCalendar();
+    }
+
     function renderCalendar() {
         const cal = document.getElementById('calendar'); cal.innerHTML = "";
-        const now = new Date();
-        const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-        for(let i=1; i<=days; i++) {
-            const dStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        const year = currentViewDate.getFullYear();
+        const month = currentViewDate.getMonth();
+        const monthLabel = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentViewDate);
+        document.getElementById('month-label').innerText = monthLabel;
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        for(let i=1; i<=daysInMonth; i++) {
+            const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
             const count = (state.sportHistory[dStr] || []).length;
             let cls = count >= 10 ? "green" : (count >= 5 ? "orange" : "");
-            cal.innerHTML += `<div class="day ${cls} ${i === now.getDate() ? 'today' : ''}">${i}</div>`;
+            let resetTag = (i === 1) ? '<span class="reset-tag">⬇️LP</span>' : '';
+            let resetClass = (i === 1) ? 'day-reset' : '';
+            cal.innerHTML += `<div class="day ${cls} ${dStr === todayStr ? 'today' : ''} ${resetClass}"><span>${i}</span>${resetTag}</div>`;
         }
     }
 
@@ -287,6 +407,18 @@
         document.getElementById('timer').innerText = `${d}j ${h}h ${m}m ${s}s`;
         const icon = document.getElementById('tree-icon');
         if(d >= 30) icon.innerText = "🌸"; else if(d >= 15) icon.innerText = "🌳"; else if(d >= 7) icon.innerText = "🌿"; else icon.innerText = "🌱";
+    }
+
+    function passPrestige() {
+        if(confirm("Passer au Prestige suivant ? Vos LP reviendront à 0.")) {
+            state.prestige++; state.points = 0; save(); location.reload();
+        }
+    }
+
+    function resetAddiction() {
+        if(confirm("Confirmer la rechute ? L'arbre repart de zéro.")) {
+            state.startDate = new Date().getTime(); save();
+        }
     }
 
     function exportData() {
@@ -301,12 +433,6 @@
             const reader = new FileReader(); reader.readAsText(e.target.files[0]);
             reader.onload = re => { state = JSON.parse(re.target.result); save(); location.reload(); }
         }; input.click();
-    }
-
-    function resetAddiction() {
-        if(confirm("Confirmer la rechute ? L'arbre repart de zéro.")) {
-            state.startDate = new Date().getTime(); save();
-        }
     }
 
     temporalChecks(); renderExos(); renderCalendar(); updateUI(); setInterval(updateTimer, 1000); updateTimer();
