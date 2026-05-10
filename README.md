@@ -38,7 +38,7 @@ L'application est contenue dans un seul fichier HTML, ce qui la rend extrêmemen
 Pour une expérience optimale, tu peux l'installer comme une application :
 * **Lien du site :** https://paul59-dev.github.io/quiet/
 *   **iOS (Safari) :** Partager -> "Sur l'écran d'accueil".
-*   **Android (Chrome) :** Menu (3 points) -> "Installer l'application".
+*   **Android (Chrome) :** Menu (3 points) -> "Ajouter sur l'ecran d'accueil".
 
 ---
 
