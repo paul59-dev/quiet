@@ -272,10 +272,14 @@
     function temporalChecks() {
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
+
+        // 1. Changement de mois (-200 LP)
         if (state.lastSeasonMonth !== now.getMonth()) {
             state.points = Math.max(0, state.points - 200);
             state.lastSeasonMonth = now.getMonth();
         }
+
+        // 2. Changement de jour (Calcul malus journée précédente)
         if (state.lastCheckDate !== todayStr) {
             const yesterday = state.lastCheckDate;
             const done = (state.sportHistory[yesterday] || []).length;
@@ -323,17 +327,14 @@
     function enableEdit(index) {
         const textElem = document.getElementById(`text-${index}`);
         const btn = document.getElementById(`btn-edit-${index}`);
-        
         textElem.contentEditable = "true";
         textElem.focus();
-        // Placer le curseur à la fin
         const range = document.createRange();
         const sel = window.getSelection();
         range.selectNodeContents(textElem);
         range.collapse(false);
         sel.removeAllRanges();
         sel.addRange(range);
-        
         btn.innerText = "✅";
         btn.classList.add('active');
         btn.onclick = () => finishEdit(index);
@@ -343,26 +344,19 @@
         const textElem = document.getElementById(`text-${index}`);
         const btn = document.getElementById(`btn-edit-${index}`);
         const newText = textElem.innerText.trim();
-        
         if (newText !== "") {
             state.customExos[index] = newText;
             save();
         } else {
             textElem.innerText = state.customExos[index];
         }
-        
         textElem.contentEditable = "false";
         btn.innerText = "✏️";
         btn.classList.remove('active');
         btn.onclick = () => enableEdit(index);
     }
 
-    function checkEnter(e, index) {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            finishEdit(index);
-        }
-    }
+    function checkEnter(e, index) { if (e.key === "Enter") { e.preventDefault(); finishEdit(index); } }
 
     function toggleExo(i) {
         const t = new Date().toISOString().split('T')[0];
@@ -435,7 +429,23 @@
         }; input.click();
     }
 
+    // --- INITIALISATION ---
     temporalChecks(); renderExos(); renderCalendar(); updateUI(); setInterval(updateTimer, 1000); updateTimer();
+
+    // --- BOUCLE DE VÉRIFICATION MINUIT (Toutes les 30 secondes) ---
+    setInterval(() => {
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        
+        if (state.lastCheckDate !== todayStr || state.lastSeasonMonth !== now.getMonth()) {
+            console.log("Changement temporel détecté. Actualisation...");
+            temporalChecks(); 
+            renderExos(); 
+            renderCalendar(); 
+            updateUI();
+        }
+    }, 30000);
+
 </script>
 
 </body>
