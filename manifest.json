@@ -1,0 +1,15 @@
+{
+  "short_name": "Eveil",
+  "name": "Eveil Discipline Ladder",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3069/3069172.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "index.html",
+  "background_color": "#0f172a",
+  "display": "standalone",
+  "theme_color": "#0f172a"
+}
