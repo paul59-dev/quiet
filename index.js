@@ -14,11 +14,9 @@ let state = JSON.parse(localStorage.getItem('eveil_v6_final')) || {
     startDate: new Date().getTime(),
     sportHistory: {},
     lastCheckDate: new Date().toLocaleDateString('en-CA'),
-    lastSeasonMonth: new Date().getMonth(),
+    lastSeasonMonth: new Date().getMonth(), // Stocke le mois du dernier reset
     customExos: [...DEFAULT_EXOS]
 };
-
-if (!state.customExos) state.customExos = [...DEFAULT_EXOS];
 
 let currentViewDate = new Date();
 
@@ -27,14 +25,23 @@ function save() { localStorage.setItem('eveil_v6_final', JSON.stringify(state));
 function temporalChecks() {
     const now = new Date();
     const todayStr = now.toLocaleDateString('en-CA');
+    const currentMonth = now.getMonth();
 
-    // 1. Changement de mois (-200 LP)
-    if (state.lastSeasonMonth !== now.getMonth()) {
+    // LOGIQUE RESET 2 MOIS :
+    // On définit des blocs : [Jan-Fev], [Mar-Avr], [Mai-Juin], etc.
+    // Un bloc change quand le mois actuel est différent du mois enregistré 
+    // ET que le mois actuel est un mois "impair" (Jan=0, Mar=2, Mai=4...)
+    // Ou plus simplement : si l'index du bloc (Math.floor(mois/2)) change.
+    
+    const lastBlock = Math.floor(state.lastSeasonMonth / 2);
+    const currentBlock = Math.floor(currentMonth / 2);
+
+    if (currentBlock !== lastBlock) {
         state.points = Math.max(0, state.points - 200);
-        state.lastSeasonMonth = now.getMonth();
+        state.lastSeasonMonth = currentMonth;
+        console.log("Nouvelle saison de 2 mois détectée ! -200 LP");
     }
 
-    // 2. Changement de jour : On met juste à jour la date sans enlever de points
     if (state.lastCheckDate !== todayStr) {
         state.lastCheckDate = todayStr;
     }
@@ -48,9 +55,11 @@ function updateUI() {
     document.getElementById('rank-name').innerText = cur.name;
     document.getElementById('rank-name').style.color = cur.color;
     document.getElementById('lp-val').innerText = state.points;
+    
     const pArea = document.getElementById('prestige-area');
     const activeClass = state.prestige > 0 ? "prestige-active" : "";
     pArea.innerHTML = `<div class="prestige-badge ${activeClass}">PRESTIGE ${state.prestige}</div>`;
+    
     document.getElementById('prestige-btn').style.display = state.points >= 1000 ? "block" : "none";
     const range = next.min - cur.min;
     const prog = next === cur ? 100 : ((state.points - cur.min) / range) * 100;
@@ -67,7 +76,7 @@ function renderExos() {
             <div class="exo-content">
                 <input type="checkbox" ${done.includes(i) ? 'checked' : ''} onclick="toggleExo(${i})">
                 <div class="exo-text" id="text-${i}" onclick="if(this.contentEditable !== 'true') toggleExo(${i})" 
-                        onblur="finishEdit(${i})" onkeydown="checkEnter(event, ${i})">${ex}</div>
+                     onblur="finishEdit(${i})" onkeydown="checkEnter(event, ${i})">${ex}</div>
             </div>
             <button class="btn-edit" id="btn-edit-${i}" onclick="enableEdit(${i})">✏️</button>
         </div>
@@ -80,34 +89,21 @@ function enableEdit(index) {
     const btn = document.getElementById(`btn-edit-${index}`);
     textElem.contentEditable = "true";
     textElem.focus();
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.selectNodeContents(textElem);
-    range.collapse(false);
-    sel.removeAllRanges();
-    sel.addRange(range);
     btn.innerText = "✅";
-    btn.classList.add('active');
     btn.onclick = () => finishEdit(index);
 }
 
 function finishEdit(index) {
     const textElem = document.getElementById(`text-${index}`);
     const btn = document.getElementById(`btn-edit-${index}`);
-    const newText = textElem.innerText.trim();
-    if (newText !== "") {
-        state.customExos[index] = newText;
-        save();
-    } else {
-        textElem.innerText = state.customExos[index];
-    }
+    state.customExos[index] = textElem.innerText.trim() || DEFAULT_EXOS[index];
+    save();
     textElem.contentEditable = "false";
     btn.innerText = "✏️";
-    btn.classList.remove('active');
     btn.onclick = () => enableEdit(index);
 }
 
-function checkEnter(e, index) { if (e.key === "Enter") { e.preventDefault(); finishEdit(index); } }
+function checkEnter(e, i) { if (e.key === "Enter") { e.preventDefault(); finishEdit(i); } }
 
 function toggleExo(i) {
     const t = new Date().toLocaleDateString('en-CA');
@@ -122,17 +118,12 @@ function toggleExo(i) {
     save(); renderExos(); renderCalendar(); updateUI();
 }
 
-function changeMonth(dir) {
-    currentViewDate.setMonth(currentViewDate.getMonth() + dir);
-    renderCalendar();
-}
-
 function renderCalendar() {
     const cal = document.getElementById('calendar'); cal.innerHTML = "";
     const year = currentViewDate.getFullYear();
     const month = currentViewDate.getMonth();
-    const monthLabel = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentViewDate);
-    document.getElementById('month-label').innerText = monthLabel;
+    document.getElementById('month-label').innerText = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentViewDate);
+    
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const todayStr = new Date().toLocaleDateString('en-CA');
 
@@ -140,9 +131,7 @@ function renderCalendar() {
         const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         const count = (state.sportHistory[dStr] || []).length;
         let cls = count >= 10 ? "green" : (count >= 5 ? "orange" : "");
-        let resetTag = (i === 1) ? '<span class="reset-tag">⬇️LP</span>' : '';
-        let resetClass = (i === 1) ? 'day-reset' : '';
-        cal.innerHTML += `<div class="day ${cls} ${dStr === todayStr ? 'today' : ''} ${resetClass}"><span>${i}</span>${resetTag}</div>`;
+        cal.innerHTML += `<div class="day ${cls} ${dStr === todayStr ? 'today' : ''}">${i}</div>`;
     }
 }
 
@@ -154,45 +143,17 @@ function updateTimer() {
     if(d >= 30) icon.innerText = "🌸"; else if(d >= 15) icon.innerText = "🌳"; else if(d >= 7) icon.innerText = "🌿"; else icon.innerText = "🌱";
 }
 
-function passPrestige() {
-    if(confirm("Passer au Prestige suivant ? Vos LP reviendront à 0.")) {
-        state.prestige++; state.points = 0; save(); location.reload();
-    }
+function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() + dir); renderCalendar(); }
+function passPrestige() { if(confirm("Passer Prestige ? LP -> 0")) { state.prestige++; state.points = 0; save(); location.reload(); } }
+function resetAddiction() { if(confirm("Rechute ?")) { state.startDate = new Date().getTime(); save(); } }
+function exportData() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(state)])); a.download = 'backup.json'; a.click(); }
+function importData() { 
+    const i = document.createElement('input'); i.type = 'file'; 
+    i.onchange = e => { const r = new FileReader(); r.readAsText(e.target.files[0]); r.onload = res => { state = JSON.parse(res.target.result); save(); location.reload(); }}; 
+    i.click(); 
 }
 
-function resetAddiction() {
-    if(confirm("Confirmer la rechute ? L'arbre repart de zéro.")) {
-        state.startDate = new Date().getTime(); save();
-    }
-}
-
-function exportData() {
-    const blob = new Blob([JSON.stringify(state)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'eveil_discipline.json'; a.click();
-}
-
-function importData() {
-    const input = document.createElement('input'); input.type = 'file';
-    input.onchange = e => {
-        const reader = new FileReader(); reader.readAsText(e.target.files[0]);
-        reader.onload = re => { state = JSON.parse(re.target.result); save(); location.reload(); }
-    }; input.click();
-}
-
-// --- INITIALISATION ---
+// Init
 temporalChecks(); renderExos(); renderCalendar(); updateUI(); setInterval(updateTimer, 1000); updateTimer();
-
-// Focus de la page pour rafraîchir en revenant
-window.addEventListener('focus', () => {
-    temporalChecks(); renderExos(); renderCalendar(); updateUI();
-});
-
-// Boucle de vérification
-setInterval(() => {
-    const now = new Date();
-    const todayStr = now.toLocaleDateString('en-CA');
-    if (state.lastCheckDate !== todayStr || state.lastSeasonMonth !== now.getMonth()) {
-        temporalChecks(); renderExos(); renderCalendar(); updateUI();
-    }
-}, 30000);
+setInterval(temporalChecks, 30000);
+window.addEventListener('focus', temporalChecks);

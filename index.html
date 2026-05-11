@@ -16,6 +16,7 @@
 <body>
 
 <div class="container">
+    <!-- Barre Latérale : Rang et Stats -->
     <div class="sidebar">
         <div class="card rank-header">
             <div id="prestige-area"></div>
@@ -38,13 +39,14 @@
 
             <button class="btn btn-danger" onclick="resetAddiction()">ÉCHEC (RESET ARBRE)</button>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+            <div class="save-controls">
                 <button class="btn btn-save" onclick="exportData()">💾 SAUVER</button>
                 <button class="btn btn-save" onclick="importData()">📂 CHARGER</button>
             </div>
         </div>
     </div>
 
+    <!-- Contenu Principal : Exercices et Calendrier -->
     <div class="main-content">
         <div class="card">
             <h2 style="margin: 0 0 20px 0; font-size: 1.4rem;">🏋️ Mes Exercices (<span id="exo-count" style="color: var(--primary);">0/10</span>)</h2>
@@ -58,8 +60,8 @@
                 <button class="cal-nav-btn" onclick="changeMonth(1)">❯</button>
             </div>
             <div class="cal-grid" id="calendar"></div>
-            <p style="font-size: 0.65rem; color: var(--danger); margin-top: 10px; text-align: center; opacity: 0.8;">
-                Le 1er de chaque mois : Fin de saison (-200 LP).
+            <p class="reset-info">
+                Saison de 2 mois : Fin de saison le 1er jour des mois impairs (Jan, Mar, Mai, Juil, Sept, Nov). Malus : -200 LP.
             </p>
         </div>
     </div>
