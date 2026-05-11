@@ -258,7 +258,7 @@
         points: 0, prestige: 0,
         startDate: new Date().getTime(),
         sportHistory: {},
-        lastCheckDate: new Date().toISOString().split('T')[0],
+        lastCheckDate: new Date().toLocaleDateString('en-CA'),
         lastSeasonMonth: new Date().getMonth(),
         customExos: [...DEFAULT_EXOS]
     };
@@ -271,7 +271,7 @@
 
     function temporalChecks() {
         const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
+        const todayStr = now.toLocaleDateString('en-CA');
 
         // 1. Changement de mois (-200 LP)
         if (state.lastSeasonMonth !== now.getMonth()) {
@@ -279,12 +279,8 @@
             state.lastSeasonMonth = now.getMonth();
         }
 
-        // 2. Changement de jour (Calcul malus journée précédente)
+        // 2. Changement de jour : On met juste à jour la date sans enlever de points
         if (state.lastCheckDate !== todayStr) {
-            const yesterday = state.lastCheckDate;
-            const done = (state.sportHistory[yesterday] || []).length;
-            const missed = 10 - done;
-            if (missed > 0) state.points = Math.max(0, state.points - missed);
             state.lastCheckDate = todayStr;
         }
         save();
@@ -308,7 +304,7 @@
     }
 
     function renderExos() {
-        const t = new Date().toISOString().split('T')[0];
+        const t = new Date().toLocaleDateString('en-CA');
         const done = state.sportHistory[t] || [];
         const container = document.getElementById('exo-list');
         container.innerHTML = state.customExos.map((ex, i) => `
@@ -359,7 +355,7 @@
     function checkEnter(e, index) { if (e.key === "Enter") { e.preventDefault(); finishEdit(index); } }
 
     function toggleExo(i) {
-        const t = new Date().toISOString().split('T')[0];
+        const t = new Date().toLocaleDateString('en-CA');
         if (!state.sportHistory[t]) state.sportHistory[t] = [];
         if (!state.sportHistory[t].includes(i)) {
             state.sportHistory[t].push(i);
@@ -383,7 +379,7 @@
         const monthLabel = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentViewDate);
         document.getElementById('month-label').innerText = monthLabel;
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const todayStr = new Date().toISOString().split('T')[0];
+        const todayStr = new Date().toLocaleDateString('en-CA');
 
         for(let i=1; i<=daysInMonth; i++) {
             const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
@@ -432,21 +428,20 @@
     // --- INITIALISATION ---
     temporalChecks(); renderExos(); renderCalendar(); updateUI(); setInterval(updateTimer, 1000); updateTimer();
 
-    // --- BOUCLE DE VÉRIFICATION MINUIT (Toutes les 30 secondes) ---
+    // Focus de la page pour rafraîchir en revenant
+    window.addEventListener('focus', () => {
+        temporalChecks(); renderExos(); renderCalendar(); updateUI();
+    });
+
+    // Boucle de vérification
     setInterval(() => {
         const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
-        
+        const todayStr = now.toLocaleDateString('en-CA');
         if (state.lastCheckDate !== todayStr || state.lastSeasonMonth !== now.getMonth()) {
-            console.log("Changement temporel détecté. Actualisation...");
-            temporalChecks(); 
-            renderExos(); 
-            renderCalendar(); 
-            updateUI();
+            temporalChecks(); renderExos(); renderCalendar(); updateUI();
         }
     }, 30000);
 
 </script>
-
 </body>
 </html>
