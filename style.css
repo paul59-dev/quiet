@@ -176,7 +176,7 @@ body {
 
 .exo-item:hover .btn-edit { opacity: 1; }
 
-/* --- CALENDRIER (CORRIGÉ) --- */
+/* --- CALENDRIER --- */
 .cal-header {
     display: flex;
     justify-content: space-between;
@@ -215,6 +215,7 @@ body {
     justify-content: center; 
     border: 1px solid transparent;
     color: var(--text-dim);
+    position: relative;
 }
 
 .day.green { 
@@ -232,6 +233,21 @@ body {
     border: 2px solid var(--primary); 
     color: var(--primary);
     background: rgba(59, 130, 246, 0.05);
+}
+
+/* Style spécifique pour le RESET de saison */
+.day-reset {
+    border: 1px dashed var(--danger) !important;
+    background: rgba(239, 68, 68, 0.05) !important;
+}
+
+.reset-warning {
+    position: absolute;
+    top: -5px;
+    right: -2px;
+    font-size: 0.7rem;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+    z-index: 2;
 }
 
 /* --- BOUTONS --- */
@@ -261,6 +277,7 @@ body {
     color: white; 
     margin-bottom: 15px;
     box-shadow: 0 4px 15px rgba(244, 63, 94, 0.4);
+    display: none; /* Géré par JS */
 }
 
 .save-controls { 
@@ -283,12 +300,14 @@ body {
     padding: 20px; 
     margin: 25px 0; 
     border: 1px solid var(--border);
+    text-align: center;
 }
 
 #timer { 
     font-variant-numeric: tabular-nums; 
     font-size: 1.5rem; 
     letter-spacing: -1px; 
+    font-weight: 700;
 }
 
 .reset-info { 
