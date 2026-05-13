@@ -1,174 +1,210 @@
-const DEFAULT_EXOS = ["20 Pompes", "30 Squats", "1min Gainage", "40 Jumping Jacks", "15 Burpees", "20 Fentes", "30 Abdos", "10 Tractions", "2min Course", "10mn Étirements"];
+ const DEFAULT_EXOS = ["20 Pompes", "30 Squats", "1min Gainage", "40 Jumping Jacks", "15 Burpees", "20 Fentes", "30 Abdos", "10 Ponts fessiers", "2min Course", "10 Tuck Jumps"];
+    const RANKS = [
+        { name: "RANG E", min: 0, icon: "E", color: "#94a3b8" },
+        { name: "RANG D", min: 100, icon: "D", color: "#22c55e" },
+        { name: "RANG C", min: 300, icon: "C", color: "#3b82f6" },
+        { name: "RANG B", min: 600, icon: "B", color: "#a855f7" },
+        { name: "RANG A", min: 1200, icon: "A", color: "#f59e0b" },
+        { name: "RANG S", min: 2500, icon: "S", color: "#ff0055" }
+    ];
 
-const RANKS = [
-    { name: "Non Classé", min: 0, icon: "⚪", color: "#94a3b8" },
-    { name: "Bronze", min: 50, icon: "🥉", color: "#cd7f32" },
-    { name: "Argent", min: 150, icon: "🥈", color: "#c0c0c0" },
-    { name: "Or", min: 300, icon: "🥇", color: "#ffd700" },
-    { name: "Platine", min: 600, icon: "💎", color: "#e5e4e2" },
-    { name: "Légende", min: 1000, icon: "👑", color: "#a855f7" }
-];
-
-// Initialisation du State
-let state = JSON.parse(localStorage.getItem('eveil_v6_final')) || {
-    points: 0, 
-    prestige: 0,
-    startDate: new Date().getTime(),
-    sportHistory: {},
-    lastCheckDate: new Date().toLocaleDateString('en-CA'),
-    lastSeasonMonth: new Date().getMonth(),
-    customExos: [...DEFAULT_EXOS]
-};
-
-let currentViewDate = new Date();
-
-function save() { localStorage.setItem('eveil_v6_final', JSON.stringify(state)); }
-
-// Vérifications temporelles (Reset 2 mois et changement de jour)
-function temporalChecks() {
-    const now = new Date();
-    const todayStr = now.toLocaleDateString('en-CA');
-    const currentMonth = now.getMonth();
-
-    // Reset Saison tous les 2 mois (Jan, Mar, Mai, Juil, Sept, Nov)
-    const lastBlock = Math.floor(state.lastSeasonMonth / 2);
-    const currentBlock = Math.floor(currentMonth / 2);
-
-    if (currentBlock !== lastBlock) {
-        state.points = Math.max(0, state.points - 200);
-        state.lastSeasonMonth = currentMonth;
-        console.log("Nouvelle saison de 2 mois ! -200 LP");
-    }
-
-    // Mise à jour de la date (Pas de malus quotidien ici)
-    if (state.lastCheckDate !== todayStr) {
-        state.lastCheckDate = todayStr;
-    }
-    
+    let state = JSON.parse(localStorage.getItem('hunter_final_v3')) || {
+        points: 0, 
+        startDate: Date.now(), // Défini UNE SEULE FOIS à la création
+        lastPointReset: Date.now(),
+        sportHistory: {}, 
+        customExos: [...DEFAULT_EXOS]
+    };
     save();
-}
 
-function updateUI() {
-    let cur = RANKS[0], next = RANKS[1];
-    for (let r of RANKS) { if (state.points >= r.min) { cur = r; next = RANKS[RANKS.indexOf(r)+1] || r; } }
-    
-    document.getElementById('rank-medal').innerText = cur.icon;
-    document.getElementById('rank-name').innerText = cur.name;
-    document.getElementById('rank-name').style.color = cur.color;
-    document.getElementById('lp-val').innerText = state.points;
-    
-    const pArea = document.getElementById('prestige-area');
-    const activeClass = state.prestige > 0 ? "prestige-active" : "";
-    pArea.innerHTML = `<div class="prestige-badge ${activeClass}">PRESTIGE ${state.prestige}</div>`;
-    
-    document.getElementById('prestige-btn').style.display = state.points >= 1000 ? "block" : "none";
-    
-    const range = next.min - cur.min;
-    const prog = next === cur ? 100 : ((state.points - cur.min) / range) * 100;
-    document.getElementById('progress-bar').style.width = `${prog}%`;
-    document.getElementById('next-rank-label').innerText = next === cur ? "RANG MAX ATTEINT" : `Objectif ${next.name} : ${next.min} LP`;
-}
+    let currentViewDate = new Date();
 
-function renderExos() {
-    const t = new Date().toLocaleDateString('en-CA');
-    const done = state.sportHistory[t] || [];
-    const container = document.getElementById('exo-list');
-    
-    container.innerHTML = state.customExos.map((ex, i) => `
-        <div class="exo-item ${done.includes(i) ? 'checked' : ''}" id="item-${i}">
-            <div class="exo-content">
-                <input type="checkbox" ${done.includes(i) ? 'checked' : ''} onclick="toggleExo(${i})">
-                <div class="exo-text" id="text-${i}" onclick="if(this.contentEditable !== 'true') toggleExo(${i})" 
-                     onblur="finishEdit(${i})" onkeydown="checkEnter(event, ${i})">${ex}</div>
-            </div>
-            <button class="btn-edit" id="btn-edit-${i}" onclick="enableEdit(${i})">✏️</button>
-        </div>
-    `).join('');
-    document.getElementById('exo-count').innerText = `${done.length}/10`;
-}
+    function save() { localStorage.setItem('hunter_final_v3', JSON.stringify(state)); }
 
-function toggleExo(i) {
-    const t = new Date().toLocaleDateString('en-CA');
-    if (!state.sportHistory[t]) state.sportHistory[t] = [];
-    
-    if (!state.sportHistory[t].includes(i)) {
-        state.sportHistory[t].push(i);
-        state.points += 1;
-    } else {
-        state.sportHistory[t] = state.sportHistory[t].filter(x => x !== i);
-        state.points = Math.max(0, state.points - 1);
-    }
-    save(); renderExos(); renderCalendar(); updateUI();
-}
-
-function renderCalendar() {
-    const cal = document.getElementById('calendar'); cal.innerHTML = "";
-    const year = currentViewDate.getFullYear();
-    const month = currentViewDate.getMonth();
-    document.getElementById('month-label').innerText = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentViewDate);
-    
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const todayStr = new Date().toLocaleDateString('en-CA');
-
-    for(let i=1; i<=daysInMonth; i++) {
-        const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-        const count = (state.sportHistory[dStr] || []).length;
+    function checkPointDecay() {
+        const now = new Date();
+        const month = now.getMonth() + 1; // Janvier = 1
+        const day = now.getDate();
         
-        // Indicateur Reset : 1er jour des mois pairs (Jan=0, Mar=2, etc.)
-        const isResetDay = (i === 1 && month % 2 === 0);
+        // Vérifie si on est le 1er d'un mois pair
+        const isPenaltyDay = (day === 1 && month % 2 === 0);
+        const penaltyKey = `penalty_${now.getFullYear()}_${month}`;
         
-        let cls = count >= 10 ? "green" : (count >= 5 ? "orange" : "");
-        let resetClass = isResetDay ? "day-reset" : "";
-        let resetMarkup = isResetDay ? '<span class="reset-warning">⚠️</span>' : "";
+        const resetLbl = document.getElementById('next-reset-label');
+        
+        // Calcul du temps restant jusqu'au prochain 1er des mois pairs
+        let nextPenalty = new Date(now.getFullYear(), month, 1);
+        if ((nextPenalty.getMonth() + 1) % 2 !== 0) {
+            nextPenalty.setMonth(nextPenalty.getMonth() + 1);
+        }
+        const diff = nextPenalty - now;
+        const daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
+        resetLbl.innerText = `Prochaine purge système dans : ${daysLeft} jours`;
 
-        cal.innerHTML += `
-            <div class="day ${cls} ${dStr === todayStr ? 'today' : ''} ${resetClass}">
-                ${resetMarkup}
-                <span>${i}</span>
-            </div>`;
+        if (isPenaltyDay && localStorage.getItem(penaltyKey) !== "done") {
+            state.points = Math.max(0, state.points - 200);
+            localStorage.setItem(penaltyKey, "done"); 
+            save();
+            alert("⚠️ ALERTE SYSTÈME : Purge de -200 LP effectuée.");
+            location.reload();
+        }
     }
-}
 
-// Édition des exercices
-function enableEdit(index) {
-    const textElem = document.getElementById(`text-${index}`);
-    textElem.contentEditable = "true";
-    textElem.focus();
-    document.getElementById(`btn-edit-${index}`).innerText = "✅";
-}
+    function getT(date = new Date()) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
 
-function finishEdit(index) {
-    const textElem = document.getElementById(`text-${index}`);
-    state.customExos[index] = textElem.innerText.trim() || DEFAULT_EXOS[index];
-    save();
-    textElem.contentEditable = "false";
-    document.getElementById(`btn-edit-${index}`).innerText = "✏️";
-}
+    function getCurrentRankColor() {
+        let cur = RANKS[0];
+        for (let r of RANKS) { if (state.points >= r.min) cur = r; }
+        return cur.color;
+    }
 
-function checkEnter(e, i) { if (e.key === "Enter") { e.preventDefault(); finishEdit(i); } }
+    function updateUI() {
+        let cur = RANKS[0], next = RANKS[1];
+        for (let r of RANKS) { if (state.points >= r.min) { cur = r; next = RANKS[RANKS.indexOf(r)+1] || r; } }
+        document.documentElement.style.setProperty('--rank-color', cur.color);
+        document.getElementById('rank-medal').innerText = cur.icon;
+        document.getElementById('rank-name').innerText = cur.name;
+        document.getElementById('lp-val').innerText = state.points;
+        const prog = next === cur ? 100 : ((state.points - cur.min) / (next.min - cur.min)) * 100;
+        document.getElementById('progress-bar').style.width = `${prog}%`;
+    }
 
-// Chrono et Progression Arbre
-function updateTimer() {
-    const diff = new Date().getTime() - state.startDate;
-    const d = Math.floor(diff/86400000), h = Math.floor((diff/3600000)%24), m = Math.floor((diff/60000)%60), s = Math.floor((diff/1000)%60);
-    document.getElementById('timer').innerText = `${d}j ${h}h ${m}m ${s}s`;
-    const icon = document.getElementById('tree-icon');
-    if(d >= 30) icon.innerText = "🌸"; else if(d >= 15) icon.innerText = "🌳"; else if(d >= 7) icon.innerText = "🌿"; else icon.innerText = "🌱";
-}
+    function renderExos() {
+        const t = getT();
+        const dayData = state.sportHistory[t] || { list: [] };
+        const done = Array.isArray(dayData) ? dayData : (dayData.list || []);
+        document.getElementById('exo-list').innerHTML = state.customExos.map((ex, i) => `
+            <div class="exo-item ${done.includes(i) ? 'checked' : ''}" onclick="toggleExo(${i})">
+                <input type="checkbox" ${done.includes(i) ? 'checked' : ''} onchange="this.parentElement.click()">
+                <div class="exo-text">${ex}</div>
+            </div>`).join('');
+        document.getElementById('exo-count').innerText = `${done.length}/10`;
+    }
 
-// Fonctions Globales
-function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() + dir); renderCalendar(); }
-function passPrestige() { if(confirm("Passer Prestige ? Tes LP reviendront à 0.")) { state.prestige++; state.points = 0; save(); location.reload(); } }
-function resetAddiction() { if(confirm("Confirmer l'échec ? L'arbre repart à zéro.")) { state.startDate = new Date().getTime(); save(); } }
-function exportData() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(state)])); a.download = 'eveil_backup.json'; a.click(); }
-function importData() { 
-    const input = document.createElement('input'); input.type = 'file'; 
-    input.onchange = e => { const r = new FileReader(); r.readAsText(e.target.files[0]); r.onload = res => { state = JSON.parse(res.target.result); save(); location.reload(); }}; 
-    input.click(); 
-}
+    function toggleExo(i) {
+        const t = getT();
+        if (!state.sportHistory[t]) state.sportHistory[t] = { list: [], color: getCurrentRankColor() };
+        if (Array.isArray(state.sportHistory[t])) state.sportHistory[t] = { list: state.sportHistory[t], color: getCurrentRankColor() };
+        let dayData = state.sportHistory[t];
+        if (!dayData.list.includes(i)) {
+            dayData.list.push(i); state.points += 2;
+            dayData.color = getCurrentRankColor();
+        } else {
+            dayData.list = dayData.list.filter(x => x !== i);
+            state.points = Math.max(0, state.points - 2);
+        }
+        save(); renderExos(); renderCalendar(); updateUI();
+    }
 
-// Lancement
-temporalChecks(); renderExos(); renderCalendar(); updateUI(); 
-setInterval(updateTimer, 1000); 
-setInterval(temporalChecks, 30000); // Check toutes les 30s pour minuit
-window.addEventListener('focus', () => { temporalChecks(); renderExos(); updateUI(); });
+    function renderCalendar() {
+        const cal = document.getElementById('calendar'); cal.innerHTML = "";
+        const now = new Date();
+        const year = currentViewDate.getFullYear(), month = currentViewDate.getMonth();
+        document.getElementById('month-label').innerText = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentViewDate);
+        const days = new Date(year, month + 1, 0).getDate();
+        
+        for(let i=1; i<=days; i++) {
+            const isToday = (i === now.getDate() && month === now.getMonth() && year === now.getFullYear());
+            const isFixedPenaltyDay = (i === 1 && (month + 1) % 2 === 0);
+            
+            const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+            const dayData = state.sportHistory[dStr];
+            
+            let count = 0, rankColor = 'transparent';
+            if (dayData) {
+                count = Array.isArray(dayData) ? dayData.length : (dayData.list ? dayData.list.length : 0);
+                rankColor = dayData.color || getCurrentRankColor();
+            }
+
+            let opacity = 0;
+            if (count >= 10) opacity = 1; else if (count >= 5) opacity = 0.5; else if (count >= 1) opacity = 0.2;
+            
+            let bgStyle = "";
+            if (isFixedPenaltyDay) {
+                // Uniquement la bordure, pas de fond (background: transparent)
+                bgStyle = `border: 2px solid var(--system-warning); color: #ff4d4d; font-weight: 900; background: transparent;`;
+            } else if (opacity > 0) {
+                bgStyle = `background-color: ${hexToRgba(rankColor, opacity)}; color: ${opacity > 0.6 ? '#000' : 'var(--text)'};`;
+            }
+            
+            const penaltyTag = isFixedPenaltyDay ? `<span style="position:absolute; bottom:2px; font-size:0.4rem; color:var(--system-warning); font-weight:bold;">-200LP</span>` : "";
+            
+            cal.innerHTML += `<div class="day ${isToday ? 'today' : ''}" style="${bgStyle}">${i}${penaltyTag}</div>`;
+        }
+    }
+
+    function hexToRgba(hex, alpha) {
+        if (!hex || hex === 'transparent') return 'rgba(255,255,255,0.03)';
+        const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function exportData() {
+        const dataStr = btoa(JSON.stringify(state));
+        const io = document.getElementById('backup-io');
+        io.value = dataStr; io.select(); document.execCommand('copy');
+        alert("CODE COPIÉ !");
+    }
+
+    function importData() {
+        const io = document.getElementById('backup-io').value.trim();
+        try {
+            const decoded = JSON.parse(io.startsWith('{') ? io : atob(io));
+            if(confirm("Importer ?")) { state = decoded; save(); location.reload(); }
+        } catch(e) { alert("Code invalide"); }
+    }
+
+    function downloadBackup() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+        const a = document.createElement('a'); a.href = dataStr; a.download = "hunter_save.json"; a.click();
+    }
+
+    function importFile(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if (confirm("Charger ?")) { state = imported; save(); location.reload(); }
+            } catch (err) { alert("Erreur"); }
+        };
+        reader.readAsText(file);
+    }
+
+    function updateTimer() {
+        const diff = Date.now() - state.startDate;
+        const d = Math.floor(diff/86400000);
+        const h = Math.floor((diff/3600000)%24);
+        const m = Math.floor((diff/60000)%60);
+        const s = Math.floor((diff/1000)%60);
+        
+        document.getElementById('timer').innerText = `${d}j ${h}h ${m}m ${s}s`;
+
+        // AJOUT : MISE À JOUR DE LA POUSSE
+        const treeIcon = document.getElementById('tree-icon');
+        
+        if (d >= 100) {
+            treeIcon.innerText = "👑"; // 100 jours : Légende
+        } else if (d >= 30) {
+            treeIcon.innerText = "🌳"; // 30 jours : Arbre
+        } else if (d >= 7) {
+            treeIcon.innerText = "🌿"; // 7 jours : Plante
+        } else if (d >= 1) {
+            treeIcon.innerText = "🍃"; // 1 jour : Pousse
+        } else {
+            treeIcon.innerText = "🌱"; // Moins d'un jour : Graine
+        }
+    }
+
+    function resetAddiction() { if(confirm("CONFIRMER ÉCHEC ?")) { state.startDate = Date.now(); save(); updateTimer(); } }
+    function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() + dir); renderCalendar(); }
+
+    checkPointDecay();
+    updateUI(); renderExos(); renderCalendar();
+    setInterval(updateTimer, 1000); updateTimer();
+    setInterval(checkPointDecay, 60000);

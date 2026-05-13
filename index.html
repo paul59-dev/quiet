@@ -4,65 +4,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#05070a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Eveil">
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3069/3069172.png">
 
-    <title>EVEIL - Discipline & Ladder</title>
+    <!-- Nouvelle icône cristal bleu -->
+    <link rel="icon" type="image/png" href="https://img.icons8.com/?size=100&id=tnO9BmtsOQD8&format=png&color=000000">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/?size=100&id=tnO9BmtsOQD8&format=png&color=000000">
+
+    <title>S-SYSTEM | Solo Leveling</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+    <div class="system-glow"></div>
+
 <div class="container">
-    <!-- Barre Latérale : Rang et Stats -->
     <div class="sidebar">
-        <div class="card rank-header">
-            <div id="prestige-area"></div>
-            <span id="rank-medal">⚪</span>
-            <div id="rank-name">NON CLASSÉ</div>
-            <div class="lp-display"><span id="lp-val">0</span> LP</div>
+        <div class="card">
+            <div class="rank-display-box">
+                <div class="system-title">Statut du Challenger</div>
+                <span id="rank-medal">E</span>
+                <div id="rank-name">RANG E</div>
+                <div class="lp-display"><span id="lp-val">0</span> LP</div>
+                <div class="progress-container"><div id="progress-bar"></div></div>
+                <div id="next-rank-label" style="font-size: 0.65rem; color: var(--text-dim);">Progression de Rang</div>
+            </div>
+
+            <div style="margin-top: 25px; border-top: 1px solid var(--border); padding-top: 20px; text-align: center;">
+                <div id="tree-icon" style="font-size: 2.5rem; margin-bottom: 10px;">🌱</div>
+                <div id="timer">00:00:00</div>
+                <div style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px; text-transform: uppercase;">Temps de Survie</div>
+            </div>
+
+            <button class="btn btn-danger" style="margin-top:20px" onclick="resetAddiction()">ÉCHEC DE MISSION</button>
             
-            <div class="progress-container">
-                <div id="progress-bar"></div>
-            </div>
-            <div id="next-rank-label" style="font-size: 0.75rem; opacity: 0.6;">Objectif : 50 LP</div>
-
-            <button id="prestige-btn" class="btn btn-prestige" onclick="passPrestige()">PASSER AU PRESTIGE SUIVANT ✨</button>
-
-            <div class="timer-box">
-                <div id="tree-icon" style="font-size: 3rem;">🌱</div>
-                <div id="timer" style="font-family: monospace; font-size: 1.4rem; font-weight: bold; margin: 5px 0;">00:00:00</div>
-                <div style="font-size: 0.65rem; opacity: 0.5; text-transform: uppercase;">Abstinence totale</div>
-            </div>
-
-            <button class="btn btn-danger" onclick="resetAddiction()">ÉCHEC (RESET ARBRE)</button>
-
-            <div class="save-controls">
-                <button class="btn btn-save" onclick="exportData()">💾 SAUVER</button>
-                <button class="btn btn-save" onclick="importData()">📂 CHARGER</button>
+            <div style="margin-top: 30px; border-top: 1px dashed var(--border); padding-top: 20px;">
+                <div class="system-title">Archives du Système</div>
+                <button class="btn btn-system" onclick="exportData()">Générer Code</button>
+                <button class="btn btn-system" onclick="downloadBackup()" style="background: #1e293b; color: #fff; border: 1px solid var(--border);">Télécharger Fichier</button>
+                <textarea id="backup-io" class="backup-input" placeholder="Collez un code ici..."></textarea>
+                <button class="btn btn-danger" style="font-size:0.6rem" onclick="importData()">Restaurer via Code</button>
+                <label for="file-input" class="btn btn-danger" style="display: block; text-align: center; line-height: 1.5; font-size:0.6rem">Restaurer via Fichier</label>
+                <input type="file" id="file-input" style="display:none" accept=".json" onchange="importFile(event)">
             </div>
         </div>
     </div>
 
-    <!-- Contenu Principal : Exercices et Calendrier -->
     <div class="main-content">
         <div class="card">
-            <h2 style="margin: 0 0 20px 0; font-size: 1.4rem;">🏋️ Mes Exercices (<span id="exo-count" style="color: var(--primary);">0/10</span>)</h2>
-            <div class="exo-list" id="exo-list"></div>
+            <div class="system-title">Quête Quotidienne</div>
+            <h2 style="margin: 0 0 20px 0;">Objectifs : <span id="exo-count">0/10</span></h2>
+            <div id="exo-list"></div>
         </div>
 
-        <div class="card">
-            <div class="cal-header">
-                <button class="cal-nav-btn" onclick="changeMonth(-1)">❮</button>
-                <h2 id="month-label" style="margin:0; font-size: 1.2rem; text-transform: capitalize;">Mois</h2>
-                <button class="cal-nav-btn" onclick="changeMonth(1)">❯</button>
+        <div class="card" id="calendar-card">
+            <div id="warning-text" style="display:none; color:var(--system-warning); font-weight:900; font-size:0.7rem; text-align:center; margin-bottom:10px; letter-spacing:1px;">⚠️ ALERTE : DÉGRADATION DE RANG IMMINENTE (-200 LP) ⚠️</div>
+            <div class="system-title">Journal de Progression</div>
+            <div style="display:flex; justify-content: space-between; margin-bottom:15px">
+                <button onclick="changeMonth(-1)" style="background:none; border:none; color:var(--rank-color); cursor:pointer; padding: 10px;">◀</button>
+                <h3 id="month-label" style="font-size:0.9rem">Mois</h3>
+                <button onclick="changeMonth(1)" style="background:none; border:none; color:var(--rank-color); cursor:pointer; padding: 10px;">▶</button>
             </div>
             <div class="cal-grid" id="calendar"></div>
-            <p class="reset-info">
-                Saison de 2 mois : Fin de saison le 1er jour des mois impairs (Jan, Mar, Mai, Juil, Sept, Nov). Malus : -200 LP.
-            </p>
+            <div id="next-reset-label" style="font-size:0.6rem; color:var(--text-dim); text-align:center; margin-top:15px; text-transform:uppercase;"></div>
         </div>
     </div>
 </div>
