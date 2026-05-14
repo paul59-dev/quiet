@@ -3,15 +3,16 @@
   "name": "Eveil Discipline Ladder",
   "icons": [
     {
+      "src": "https://img.icons8.com/?size=192&id=tnO9BmtsOQD8&format=png&color=000000",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
       "src": "https://img.icons8.com/?size=512&id=tnO9BmtsOQD8&format=png&color=000000",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://img.icons8.com/?size=192&id=tnO9BmtsOQD8&format=png&color=000000",
-      "type": "image/png",
-      "sizes": "192x192"
+      "purpose": "maskable"
     }
   ],
   "start_url": "./index.html",
