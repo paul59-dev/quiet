@@ -81,21 +81,22 @@
 
         .mode-btn {
             flex: 1 1 calc(50% - 10px);
-            padding: 10px;
+            padding: 12px 5px;
             border: none;
             border-radius: 6px;
-            background: transparent;
-            color: var(--text-dim);
+            background: rgba(255, 255, 255, 0.05); /* Fond gris très léger par défaut */
+            color: #64748b; /* Couleur de texte fixe au départ */
             font-weight: 800;
             font-size: 0.65rem;
             text-transform: uppercase;
             cursor: pointer;
             transition: 0.3s;
+            -webkit-appearance: none; /* Désactive le style par défaut iOS/Android */
         }
 
         .mode-btn.active {
-            background: var(--rank-color);
-            color: #000;
+            background-color: var(--rank-color, #94a3b8) !important; /* Utilise la variable OU le gris si non chargée */
+            color: #000 !important;
         }
 
         .rank-display-box { text-align: center; padding: 20px 0; }

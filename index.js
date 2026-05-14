@@ -29,12 +29,20 @@ const EXOS = {
 
     function setMode(m) {
         state.mode = m;
+        const curColor = getCurrentRankColor(); // On récupère la couleur actuelle
+        
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.classList.remove('active');
-            btn.style.backgroundColor = 'transparent';
+            btn.style.backgroundColor = "rgba(255, 255, 255, 0.05)"; // Couleur de repos
+            btn.style.color = "#64748b";
         });
+
         const activeBtn = document.getElementById('mode-' + m);
-        if(activeBtn) activeBtn.classList.add('active');
+        if(activeBtn) {
+            activeBtn.classList.add('active');
+            activeBtn.style.backgroundColor = curColor; // Application forcée
+            activeBtn.style.color = "#000";
+        }
         save();
         renderExos();
         updateUI();
