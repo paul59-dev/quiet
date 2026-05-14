@@ -60,6 +60,14 @@
     <div class="main-content">
         <div class="card">
             <div class="system-title">Quête Quotidienne</div>
+            
+            <div class="mode-selector">
+                <button id="mode-haut" class="mode-btn" onclick="setMode('haut')">💪 HAUT</button>
+                <button id="mode-fessier" class="mode-btn" onclick="setMode('fessier')">🍑 FESSIERS</button>
+                <button id="mode-bas" class="mode-btn" onclick="setMode('bas')">🦵 BAS</button>
+                <button id="mode-bonus" class="mode-btn" onclick="setMode('bonus')">✨ BONUS</button>
+            </div>
+
             <h2 style="margin: 0 0 20px 0;">Objectifs : <span id="exo-count">0/10</span></h2>
             <div id="exo-list"></div>
         </div>

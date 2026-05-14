@@ -1,4 +1,10 @@
- const DEFAULT_EXOS = ["20 Pompes", "30 Squats", "1min Gainage", "40 Jumping Jacks", "15 Burpees", "20 Fentes", "30 Abdos", "10 Ponts fessiers", "2min Course", "10 Tuck Jumps"];
+const EXOS = {
+        haut: ["20 Pompes", "10 Pompes Diamant", "1min Gainage", "15 Extensions de poignet", "5 Burpees", "30 Abdos", "10 Dips", "15 Tractions", "1min Planche", "10 Russian Twists"],
+        fessier: ["10 Ponts fessiers", "15 Donkey Kicks", "10 Fire Hydrants", "10 Fentes arrière", "1min Chaise", "10 Squats Sumos", "15 Relevés de bassin", "10 Side Lunges", "10 Clamshells", "5min Étirements fessiers"],
+        bas: ["10 Squats Sautés", "10 Tuck Jumps", "10 Fentes", "15 Montées de genoux", "10 Calf Raises", "10 Box Jumps", "1min Mountain Climber", "10 Burpees", "10 Squats Classiques", "1min Course sur place"],
+        bonus: ["5min Marche à pied", "5min Course", "5min Marche Inclinée", "10min Vélo", "15min Stretching", "5min Saut à la corde", "10min Yoga", "5min Ombre", "5min Gainage dynamique", "5min Mobilité"]
+    };
+
     const RANKS = [
         { name: "RANG E", min: 0, icon: "E", color: "#94a3b8" },
         { name: "RANG D", min: 100, icon: "D", color: "#22c55e" },
@@ -6,14 +12,14 @@
         { name: "RANG B", min: 600, icon: "B", color: "#a855f7" },
         { name: "RANG A", min: 1200, icon: "A", color: "#f59e0b" },
         { name: "RANG S", min: 2500, icon: "S", color: "#ff0055" }
-    ];
+    ]; 
 
     let state = JSON.parse(localStorage.getItem('hunter_final_v3')) || {
         points: 0, 
-        startDate: Date.now(), // Défini UNE SEULE FOIS à la création
+        startDate: Date.now(),
         lastPointReset: Date.now(),
         sportHistory: {}, 
-        customExos: [...DEFAULT_EXOS]
+        mode: 'haut' 
     };
     save();
 
@@ -21,26 +27,31 @@
 
     function save() { localStorage.setItem('hunter_final_v3', JSON.stringify(state)); }
 
+    function setMode(m) {
+        state.mode = m;
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.remove('active');
+            btn.style.backgroundColor = 'transparent';
+        });
+        const activeBtn = document.getElementById('mode-' + m);
+        if(activeBtn) activeBtn.classList.add('active');
+        save();
+        renderExos();
+        updateUI();
+    }
+
     function checkPointDecay() {
         const now = new Date();
-        const month = now.getMonth() + 1; // Janvier = 1
+        const month = now.getMonth() + 1;
         const day = now.getDate();
-        
-        // Vérifie si on est le 1er d'un mois pair
         const isPenaltyDay = (day === 1 && month % 2 === 0);
         const penaltyKey = `penalty_${now.getFullYear()}_${month}`;
-        
         const resetLbl = document.getElementById('next-reset-label');
-        
-        // Calcul du temps restant jusqu'au prochain 1er des mois pairs
         let nextPenalty = new Date(now.getFullYear(), month, 1);
-        if ((nextPenalty.getMonth() + 1) % 2 !== 0) {
-            nextPenalty.setMonth(nextPenalty.getMonth() + 1);
-        }
+        if ((nextPenalty.getMonth() + 1) % 2 !== 0) nextPenalty.setMonth(nextPenalty.getMonth() + 1);
         const diff = nextPenalty - now;
         const daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
         resetLbl.innerText = `Prochaine purge système dans : ${daysLeft} jours`;
-
         if (isPenaltyDay && localStorage.getItem(penaltyKey) !== "done") {
             state.points = Math.max(0, state.points - 200);
             localStorage.setItem(penaltyKey, "done"); 
@@ -72,30 +83,63 @@
         document.getElementById('lp-val').innerText = state.points;
         const prog = next === cur ? 100 : ((state.points - cur.min) / (next.min - cur.min)) * 100;
         document.getElementById('progress-bar').style.width = `${prog}%`;
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            if(btn.classList.contains('active')) btn.style.backgroundColor = cur.color;
+            else btn.style.backgroundColor = 'transparent';
+        });
     }
 
     function renderExos() {
         const t = getT();
-        const dayData = state.sportHistory[t] || { list: [] };
-        const done = Array.isArray(dayData) ? dayData : (dayData.list || []);
-        document.getElementById('exo-list').innerHTML = state.customExos.map((ex, i) => `
-            <div class="exo-item ${done.includes(i) ? 'checked' : ''}" onclick="toggleExo(${i})">
-                <input type="checkbox" ${done.includes(i) ? 'checked' : ''} onchange="this.parentElement.click()">
-                <div class="exo-text">${ex}</div>
-            </div>`).join('');
-        document.getElementById('exo-count').innerText = `${done.length}/10`;
+        const dayData = state.sportHistory[t];
+        let done = [];
+        if (dayData) {
+            done = Array.isArray(dayData) ? dayData : (dayData.list || []);
+        }
+
+        let rankIndex = 0;
+        RANKS.forEach((r, i) => { if (state.points >= r.min) rankIndex = i; });
+        const multipliers = [1, 1, 1.5, 2, 3, 5];
+        const mult = multipliers[rankIndex];
+        const listToUse = EXOS[state.mode] || EXOS.haut;
+
+        // CORRECTION DU BUG : On ne compte que les exos de la catégorie actuelle
+        const currentModeDone = done.filter(id => id.startsWith(state.mode + '-'));
+
+        document.getElementById('exo-list').innerHTML = listToUse.map((ex, i) => {
+            const exoID = `${state.mode}-${i}`;
+            const isChecked = done.includes(exoID);
+            const match = ex.match(/^(\d+)(\D+)/);
+            let displayExo = ex;
+            if (match) {
+                const newQty = Math.floor(parseInt(match[1]) * mult);
+                displayExo = `<strong>${newQty}</strong>${match[2]}`;
+            }
+            return `<div class="exo-item ${isChecked ? 'checked' : ''}" onclick="toggleExo('${exoID}')">
+                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="this.parentElement.click()">
+                <div class="exo-text" style="${rankIndex >= 4 ? 'color:var(--rank-color); font-weight:bold;' : ''}">${displayExo}</div>
+            </div>`;
+        }).join('');
+        
+        document.getElementById('exo-count').innerText = `${currentModeDone.length}/10`;
     }
 
-    function toggleExo(i) {
+    function toggleExo(exoID) {
         const t = getT();
-        if (!state.sportHistory[t]) state.sportHistory[t] = { list: [], color: getCurrentRankColor() };
-        if (Array.isArray(state.sportHistory[t])) state.sportHistory[t] = { list: state.sportHistory[t], color: getCurrentRankColor() };
+        if (!state.sportHistory[t]) {
+            state.sportHistory[t] = { list: [], color: getCurrentRankColor() };
+        }
+        if (Array.isArray(state.sportHistory[t])) {
+            state.sportHistory[t] = { list: state.sportHistory[t], color: getCurrentRankColor() };
+        }
         let dayData = state.sportHistory[t];
-        if (!dayData.list.includes(i)) {
-            dayData.list.push(i); state.points += 2;
+
+        if (!dayData.list.includes(exoID)) {
+            dayData.list.push(exoID); 
+            state.points += 2;
             dayData.color = getCurrentRankColor();
         } else {
-            dayData.list = dayData.list.filter(x => x !== i);
+            dayData.list = dayData.list.filter(x => x !== exoID);
             state.points = Math.max(0, state.points - 2);
         }
         save(); renderExos(); renderCalendar(); updateUI();
@@ -107,33 +151,30 @@
         const year = currentViewDate.getFullYear(), month = currentViewDate.getMonth();
         document.getElementById('month-label').innerText = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentViewDate);
         const days = new Date(year, month + 1, 0).getDate();
-        
         for(let i=1; i<=days; i++) {
             const isToday = (i === now.getDate() && month === now.getMonth() && year === now.getFullYear());
             const isFixedPenaltyDay = (i === 1 && (month + 1) % 2 === 0);
-            
             const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
             const dayData = state.sportHistory[dStr];
-            
             let count = 0, rankColor = 'transparent';
             if (dayData) {
-                count = Array.isArray(dayData) ? dayData.length : (dayData.list ? dayData.list.length : 0);
+                const list = Array.isArray(dayData) ? dayData : (dayData.list || []);
+                count = list.length;
                 rankColor = dayData.color || getCurrentRankColor();
             }
 
             let opacity = 0;
-            if (count >= 10) opacity = 1; else if (count >= 5) opacity = 0.5; else if (count >= 1) opacity = 0.2;
-            
+            // Calendrier global : on compte le total cumulé de tous les exercices faits
+            if (count >= 10) opacity = 1.0; 
+            else if (count >= 5) opacity = 0.6; 
+            else if (count >= 2) opacity = 0.3; 
+            else if (count === 1) opacity = 0.15; 
+
             let bgStyle = "";
-            if (isFixedPenaltyDay) {
-                // Uniquement la bordure, pas de fond (background: transparent)
-                bgStyle = `border: 2px solid var(--system-warning); color: #ff4d4d; font-weight: 900; background: transparent;`;
-            } else if (opacity > 0) {
-                bgStyle = `background-color: ${hexToRgba(rankColor, opacity)}; color: ${opacity > 0.6 ? '#000' : 'var(--text)'};`;
-            }
+            if (isFixedPenaltyDay) bgStyle = `border: 2px solid var(--system-warning); color: #ff4d4d; font-weight: 900; background: transparent;`;
+            else if (opacity > 0) bgStyle = `background-color: ${hexToRgba(rankColor, opacity)}; color: ${opacity > 0.6 ? '#000' : 'var(--text)'}; font-weight: ${opacity > 0.6 ? '900' : 'normal'};`;
             
             const penaltyTag = isFixedPenaltyDay ? `<span style="position:absolute; bottom:2px; font-size:0.4rem; color:var(--system-warning); font-weight:bold;">-200LP</span>` : "";
-            
             cal.innerHTML += `<div class="day ${isToday ? 'today' : ''}" style="${bgStyle}">${i}${penaltyTag}</div>`;
         }
     }
@@ -182,29 +223,16 @@
         const h = Math.floor((diff/3600000)%24);
         const m = Math.floor((diff/60000)%60);
         const s = Math.floor((diff/1000)%60);
-        
         document.getElementById('timer').innerText = `${d}j ${h}h ${m}m ${s}s`;
-
-        // AJOUT : MISE À JOUR DE LA POUSSE
         const treeIcon = document.getElementById('tree-icon');
-        
-        if (d >= 100) {
-            treeIcon.innerText = "👑"; // 100 jours : Légende
-        } else if (d >= 30) {
-            treeIcon.innerText = "🌳"; // 30 jours : Arbre
-        } else if (d >= 7) {
-            treeIcon.innerText = "🌿"; // 7 jours : Plante
-        } else if (d >= 1) {
-            treeIcon.innerText = "🍃"; // 1 jour : Pousse
-        } else {
-            treeIcon.innerText = "🌱"; // Moins d'un jour : Graine
-        }
+        if (d >= 100) treeIcon.innerText = "👑"; else if (d >= 30) treeIcon.innerText = "🌳"; else if (d >= 7) treeIcon.innerText = "🌿"; else if (d >= 1) treeIcon.innerText = "🍃"; else treeIcon.innerText = "🌱";
     }
 
     function resetAddiction() { if(confirm("CONFIRMER ÉCHEC ?")) { state.startDate = Date.now(); save(); updateTimer(); } }
     function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() + dir); renderCalendar(); }
 
+    setMode(state.mode || 'haut');
     checkPointDecay();
-    updateUI(); renderExos(); renderCalendar();
+    updateUI(); renderCalendar();
     setInterval(updateTimer, 1000); updateTimer();
     setInterval(checkPointDecay, 60000);
