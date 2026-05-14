@@ -1,8 +1,8 @@
 const EXOS = {
-        haut: ["20 Pompes", "10 Pompes Diamant", "1min Gainage", "15 Extensions de poignet", "5 Burpees", "30 Abdos", "10 Dips", "15 Tractions", "1min Planche", "10 Russian Twists"],
-        fessier: ["10 Ponts fessiers", "15 Donkey Kicks", "10 Fire Hydrants", "10 Fentes arrière", "1min Chaise", "10 Squats Sumos", "15 Relevés de bassin", "10 Side Lunges", "10 Clamshells", "5min Étirements fessiers"],
-        bas: ["10 Squats Sautés", "10 Tuck Jumps", "10 Fentes", "15 Montées de genoux", "10 Calf Raises", "10 Box Jumps", "1min Mountain Climber", "10 Burpees", "10 Squats Classiques", "1min Course sur place"],
-        bonus: ["5min Marche à pied", "5min Course", "5min Marche Inclinée", "10min Vélo", "15min Stretching", "5min Saut à la corde", "10min Yoga", "5min Ombre", "5min Gainage dynamique", "5min Mobilité"]
+        haut: ["8 Tirage poitrine", "8 Rowing", "8 Développé couché", "8 Tirage Bucheron", "8 Corde", "8 Développé Militaire", "8 Curl Pupitre", "8 Elévation Latérales", "8 Pec Fly"],
+        bas: ["8 Presse à Cuisse", "8 Leg Extension", "8 Leg Curl"],
+        maison: ["8 Squats Sautés", "1min Montain Climber", "8 Burpees", "1min Étirements"],
+        bonus: ["5min Marche à pied", "5min Course", "5min Marche Inclinée", "10min Vélo", "5min Saut à la corde"]
     };
 
     const RANKS = [
@@ -29,18 +29,18 @@ const EXOS = {
 
     function setMode(m) {
         state.mode = m;
-        const curColor = getCurrentRankColor(); // On récupère la couleur actuelle
+        const curColor = getCurrentRankColor();
         
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.classList.remove('active');
-            btn.style.backgroundColor = "rgba(255, 255, 255, 0.05)"; // Couleur de repos
+            btn.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
             btn.style.color = "#64748b";
         });
 
         const activeBtn = document.getElementById('mode-' + m);
         if(activeBtn) {
             activeBtn.classList.add('active');
-            activeBtn.style.backgroundColor = curColor; // Application forcée
+            activeBtn.style.backgroundColor = curColor;
             activeBtn.style.color = "#000";
         }
         save();
@@ -109,9 +109,13 @@ const EXOS = {
         RANKS.forEach((r, i) => { if (state.points >= r.min) rankIndex = i; });
         const multipliers = [1, 1, 1.5, 2, 3, 5];
         const mult = multipliers[rankIndex];
+        
+        // On récupère la liste actuelle
         const listToUse = EXOS[state.mode] || EXOS.haut;
+        
+        // L'objectif devient dynamiquement la longueur de la liste (ex: 9 si tu as enlevé un exo)
+        const totalPossible = listToUse.length;
 
-        // CORRECTION DU BUG : On ne compte que les exos de la catégorie actuelle
         const currentModeDone = done.filter(id => id.startsWith(state.mode + '-'));
 
         document.getElementById('exo-list').innerHTML = listToUse.map((ex, i) => {
@@ -129,7 +133,8 @@ const EXOS = {
             </div>`;
         }).join('');
         
-        document.getElementById('exo-count').innerText = `${currentModeDone.length}/10`;
+        // Affichage dynamique : X / [Nombre d'exos réels dans le code]
+        document.getElementById('exo-count').innerText = `${currentModeDone.length}/${totalPossible}`;
     }
 
     function toggleExo(exoID) {
@@ -172,8 +177,7 @@ const EXOS = {
             }
 
             let opacity = 0;
-            // Calendrier global : on compte le total cumulé de tous les exercices faits
-            if (count >= 10) opacity = 1.0; 
+            if (count >= 9) opacity = 1.0; 
             else if (count >= 5) opacity = 0.6; 
             else if (count >= 2) opacity = 0.3; 
             else if (count === 1) opacity = 0.15; 

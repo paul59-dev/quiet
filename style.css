@@ -84,18 +84,18 @@
             padding: 12px 5px;
             border: none;
             border-radius: 6px;
-            background: rgba(255, 255, 255, 0.05); /* Fond gris très léger par défaut */
-            color: #64748b; /* Couleur de texte fixe au départ */
+            background: rgba(255, 255, 255, 0.05);
+            color: #64748b;
             font-weight: 800;
             font-size: 0.65rem;
             text-transform: uppercase;
             cursor: pointer;
             transition: 0.3s;
-            -webkit-appearance: none; /* Désactive le style par défaut iOS/Android */
+            -webkit-appearance: none;
         }
 
         .mode-btn.active {
-            background-color: var(--rank-color, #94a3b8) !important; /* Utilise la variable OU le gris si non chargée */
+            background-color: var(--rank-color, #94a3b8) !important;
             color: #000 !important;
         }
 
