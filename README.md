@@ -22,9 +22,7 @@ L'application est conçue pour récompenser la régularité et punir la néglige
 | Action | Impact LP |
 | :--- | :--- |
 | **Exercice terminé** | +1 LP |
-| **Exercice décoché** | -1 LP |
-| **Journée terminée (Exercice non fait)** | -1 LP par exercice manqué |
-| **Changement de mois (Saison)** | -200 LP (Soft Reset) |
+| **Changement tout les 2 mois (Saison)** | -200 LP (Soft Reset) |
 
 ---
 
