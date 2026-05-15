@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Dégradé du fond sombre -->
+    <radialGradient id="bg-grad" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#0d1117" />
+      <stop offset="100%" stop-color="#05070a" />
+    </radialGradient>
+
+    <!-- Dégradé Néon Cyan (Système / Mana) -->
+    <linearGradient id="neon-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2ff" />
+      <stop offset="100%" stop-color="#0066ff" />
+    </linearGradient>
+
+    <!-- Dégradé Néon Violet (Coffre / Épargne) -->
+    <linearGradient id="neon-purple" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+
+    <!-- Filtre de lueur (Glow Effect) pour le rendu SVG -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Fond du logo (Cercle parfait pour les icônes d'applications mobile) -->
+  <rect width="512" height="512" rx="128" fill="url(#bg-grad)" />
+  
+  <!-- Cercle de bordure technologique discret -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.05" />
+  <circle cx="256" cy="256" r="200" fill="none" stroke="url(#neon-cyan)" stroke-width="4" stroke-opacity="0.2" stroke-dasharray="20 10" />
+
+  <!-- Groupe Central : Le "E" d'Éveil en Cristaux Énergétiques -->
+  <g transform="translate(10, 0)">
+    <!-- Barre supérieure du E -->
+    <path d="M 160,140 L 360,140 L 330,190 L 160,190 Z" fill="url(#neon-cyan)" filter="url(#glow)" opacity="0.9" />
+    
+    <!-- Barre centrale du E (Format Éclair de Mana) -->
+    <path d="M 160,236 L 300,236 L 270,276 L 160,276 Z" fill="url(#neon-cyan)" />
+    
+    <!-- Barre inférieure du E -->
+    <path d="M 160,322 L 360,322 L 330,372 L 160,372 Z" fill="url(#neon-purple)" filter="url(#glow)" opacity="0.8" />
+    
+    <!-- Épine dorsale / Noyau du Cristal à gauche -->
+    <path d="M 130,140 L 170,140 L 170,372 L 130,372 L 110,256 Z" fill="url(#neon-cyan)" />
+  </g>
+  
+  <!-- Point d'énergie flottant (Style Interface Système) -->
+  <circle cx="390" cy="256" r="8" fill="#00f2ff" filter="url(#glow)" />
+</svg>
