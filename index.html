@@ -28,27 +28,27 @@
 <!-- LEVEL UP INTERFACE (Solo Leveling Style) -->
 <div id="level-up-modal">
     <div class="level-up-card">
-        <div class="lu-title">AVANCEMENT DU SYSTÈME</div>
-        <div style="color:white; font-size: 1.2rem; font-weight: bold; margin-top: 10px;">LEVEL UP</div>
+        <div id="lu-header-title" class="lu-title">AVANCEMENT DU SYSTÈME</div>
+        <div id="lu-main-label" style="color:white; font-size: 1.2rem; font-weight: bold; margin-top: 10px;">LEVEL UP</div>
         <div id="lu-rank-icon" class="lu-rank">D</div>
         <div id="lu-rank-name" style="color: var(--system-blue); font-weight: 900; text-transform: uppercase; letter-spacing: 2px;">RANG D</div>
         
         <div class="lu-stats">
             <div class="lu-stat-item">
-                <span>ABSTINENCE</span>
+                <span id="lu-stat-label-1">ABSTINENCE</span>
                 <span id="stat-abstinence" class="lu-stat-val">0j 0h 0m 0s</span>
             </div>
             <div class="lu-stat-item">
-                <span>RANG PRÉCÉDENT</span>
+                <span id="lu-stat-label-2">RANG PRÉCÉDENT</span>
                 <span id="stat-prev-rank" class="lu-stat-val">0j 0h 0m 0s</span>
             </div>
             <div class="lu-stat-item">
-                <span>EXERCICES COMPLÉTÉS</span>
+                <span id="lu-stat-label-3">EXERCICES COMPLÉTÉS</span>
                 <span id="stat-total-exos" class="lu-stat-val">0</span>
             </div>
         </div>
 
-        <button class="btn btn-system" style="margin-top: 20px; background: var(--system-blue);" onclick="closeLevelUp()">CONTINUER</button>
+        <button id="lu-close-btn" class="btn btn-system" style="margin-top: 20px; background: var(--system-blue);" onclick="closeLevelUp()">CONTINUER</button>
     </div>
 </div>
 

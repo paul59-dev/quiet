@@ -59,11 +59,14 @@ function toggleAbout() {
         RANKS.forEach((r, i) => { if (newPoints >= r.min) newRankIndex = i; });
 
         if (newRankIndex > state.currentRankIndex) {
+            // Montée de niveau
             showLevelUpUI(newRankIndex);
             state.currentRankIndex = newRankIndex;
             state.lastRankChangeDate = Date.now();
             save();
         } else if (newRankIndex < state.currentRankIndex) {
+            // RÉTROGRADATION (Nouveau)
+            showRankDownUI(newRankIndex);
             state.currentRankIndex = newRankIndex;
             state.lastRankChangeDate = Date.now();
             save();
@@ -71,44 +74,106 @@ function toggleAbout() {
     }
 
     function showLevelUpUI(rankIdx) {
-    const targetIdx = (rankIdx !== undefined) ? rankIdx : state.currentRankIndex;
-    const rank = RANKS[targetIdx];
-    if (!rank) return;
+        // Reset styles au cas où une purge est passée par là
+        document.getElementById('lu-header-title').innerText = "AVANCEMENT DU SYSTÈME";
+        document.getElementById('lu-main-label').innerText = "LEVEL UP";
+        document.getElementById('lu-main-label').style.color = "white";
+        document.getElementById('lu-stat-label-1').innerText = "ABSTINENCE";
+        document.getElementById('lu-stat-label-2').innerText = "RANG PRÉCÉDENT";
+        document.getElementById('lu-stat-label-3').innerText = "EXERCICES COMPLÉTÉS";
+        document.getElementById('lu-close-btn').innerText = "CONTINUER";
 
-    document.getElementById('lu-rank-icon').innerText = rank.icon;
-    document.getElementById('lu-rank-name').innerText = rank.name;
-    document.documentElement.style.setProperty('--system-blue', rank.color);
+        const targetIdx = (rankIdx !== undefined) ? rankIdx : state.currentRankIndex;
+        const rank = RANKS[targetIdx];
+        if (!rank) return;
 
-    // --- CALCUL DU TEMPS DÉTAILLÉ AVEC ZÉRO INITIAL ---
-    function formatDuration(ms) {
-        const d = Math.floor(ms / 86400000);
-        // On ajoute .toString().padStart(2, '0') pour forcer le format 01, 02, etc.
-        const h = Math.floor((ms / 3600000) % 24).toString().padStart(2, '0');
-        const m = Math.floor((ms / 60000) % 60).toString().padStart(2, '0');
-        const s = Math.floor((ms / 1000) % 60).toString().padStart(2, '0');
-        
-        return `${d}j ${h}h ${m}m ${s}s`;
+        document.getElementById('lu-rank-icon').innerText = rank.icon;
+        document.getElementById('lu-rank-name').innerText = rank.name;
+        document.documentElement.style.setProperty('--system-blue', rank.color);
+        document.querySelector('.level-up-card').style.borderColor = rank.color;
+        document.querySelector('.level-up-card').style.boxShadow = `0 0 50px ${hexToRgba(rank.color, 0.2)}`;
+
+        function formatDuration(ms) {
+            const d = Math.floor(ms / 86400000);
+            const h = Math.floor((ms / 3600000) % 24).toString().padStart(2, '0');
+            const m = Math.floor((ms / 60000) % 60).toString().padStart(2, '0');
+            const s = Math.floor((ms / 1000) % 60).toString().padStart(2, '0');
+            return `${d}j ${h}h ${m}m ${s}s`;
+        }
+
+        document.getElementById('stat-abstinence').innerText = formatDuration(Date.now() - state.startDate);
+        document.getElementById('stat-prev-rank').innerText = formatDuration(Date.now() - (state.lastRankChangeDate || state.startDate));
+
+        let totalExos = 0;
+        Object.values(state.sportHistory).forEach(dayData => {
+            const list = Array.isArray(dayData) ? dayData : (dayData.list || []);
+            totalExos += list.length;
+        });
+        document.getElementById('stat-total-exos').innerText = totalExos;
+
+        document.getElementById('level-up-modal').style.display = 'flex';
     }
 
-    const diffAbstinence = Date.now() - state.startDate;
-    const lastChange = state.lastRankChangeDate || state.startDate;
-    const diffPrevRank = Date.now() - lastChange;
+    function showPenaltyUI() {
+        // Personnalisation de la pop-up existante pour la pénalité
+        document.getElementById('lu-header-title').innerText = "ALERTE DU SYSTÈME";
+        document.getElementById('lu-main-label').innerText = "QUÊTE DE PÉNALITÉ";
+        document.getElementById('lu-main-label').style.color = "#ff0033";
+        document.getElementById('lu-rank-icon').innerText = "!";
+        document.getElementById('lu-rank-name').innerText = "DÉGRADATION";
+        
+        document.getElementById('lu-stat-label-1').innerText = "PENALITÉ";
+        document.getElementById('stat-abstinence').innerText = "-200 LP";
+        document.getElementById('stat-abstinence').style.color = "#ff0033";
+        
+        document.getElementById('lu-stat-label-2').innerText = "MOTIF";
+        document.getElementById('stat-prev-rank').innerText = "PURGE MENSUELLE";
+        
+        document.getElementById('lu-stat-label-3').innerText = "STATUT";
+        document.getElementById('stat-total-exos').innerText = "APPLIQUÉ";
 
-    document.getElementById('stat-abstinence').innerText = formatDuration(diffAbstinence);
-    document.getElementById('stat-prev-rank').innerText = formatDuration(diffPrevRank);
+        document.documentElement.style.setProperty('--system-blue', '#ff0033');
+        document.getElementById('lu-close-btn').innerText = "ACCEPTER";
+        document.getElementById('lu-close-btn').style.background = "#ff0033";
+        
+        document.getElementById('level-up-modal').style.display = 'flex';
+    }
 
-    let totalExos = 0;
-    Object.values(state.sportHistory).forEach(dayData => {
-        const list = Array.isArray(dayData) ? dayData : (dayData.list || []);
-        totalExos += list.length;
-    });
+    function showRankDownUI(rankIdx) {
+        // Personnalisation de la pop-up pour la rétrogradation
+        document.getElementById('lu-header-title').innerText = "AVERTISSEMENT DU SYSTÈME";
+        document.getElementById('lu-main-label').innerText = "RÉTROGRADATION";
+        document.getElementById('lu-main-label').style.color = "#ff0033";
+        
+        const rank = RANKS[rankIdx];
+        document.getElementById('lu-rank-icon').innerText = rank.icon;
+        document.getElementById('lu-rank-name').innerText = rank.name;
+        
+        document.getElementById('lu-stat-label-1').innerText = "STATUT";
+        document.getElementById('stat-abstinence').innerText = "RANG INFÉRIEUR";
+        document.getElementById('stat-abstinence').style.color = "#ff0033";
+        
+        document.getElementById('lu-stat-label-2').innerText = "ANCIEN RANG";
+        document.getElementById('stat-prev-rank').innerText = RANKS[rankIdx + 1] ? RANKS[rankIdx + 1].name : "Inconnu";
+        
+        document.getElementById('lu-stat-label-3').innerText = "MESSAGE";
+        document.getElementById('stat-total-exos').innerText = "LA FORCE DIMINUE...";
 
-    document.getElementById('stat-total-exos').innerText = totalExos;
-    document.getElementById('level-up-modal').style.display = 'flex';
-}
+        document.documentElement.style.setProperty('--system-blue', '#ff0033');
+        document.getElementById('lu-close-btn').innerText = "REPRENDRE L'ENTRAINEMENT";
+        document.getElementById('lu-close-btn').style.background = "#ff0033";
+        
+        document.querySelector('.level-up-card').style.borderColor = "#ff0033";
+        document.querySelector('.level-up-card').style.boxShadow = `0 0 50px rgba(255, 0, 51, 0.2)`;
+        
+        document.getElementById('level-up-modal').style.display = 'flex';
+    }
 
     function closeLevelUp() {
         document.getElementById('level-up-modal').style.display = 'none';
+        // Reset couleur bouton au cas où c'était une pénalité
+        document.getElementById('lu-close-btn').style.background = "var(--system-blue)";
+        document.getElementById('stat-abstinence').style.color = "var(--system-blue)";
     }
 
     function checkPointDecay() {
@@ -131,8 +196,8 @@ function toggleAbout() {
             state.points = Math.max(0, state.points - 200);
             localStorage.setItem(penaltyKey, "done"); 
             save();
-            alert("⚠️ ALERTE SYSTÈME : Purge de -200 LP effectuée.");
-            location.reload();
+            showPenaltyUI(); // Utilise la pop-up au lieu de l'alert
+            updateUI();
         }
     }
 
@@ -256,8 +321,8 @@ function toggleAbout() {
         const diff = Date.now() - state.startDate;
         const d = Math.floor(diff/86400000);
         const h = Math.floor((diff / 3600000) % 24).toString().padStart(2, '0');
-    const m = Math.floor((diff / 60000) % 60).toString().padStart(2, '0');
-    const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+        const m = Math.floor((diff / 60000) % 60).toString().padStart(2, '0');
+        const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
         document.getElementById('timer').innerText = `${d}j ${h}h ${m}m ${s}s`;
         const treeIcon = document.getElementById('tree-icon');
         if (d >= 100) treeIcon.innerText = "👑"; else if (d >= 30) treeIcon.innerText = "🌳"; else if (d >= 7) treeIcon.innerText = "🌿"; else if (d >= 1) treeIcon.innerText = "🍃"; else treeIcon.innerText = "🌱";
