@@ -25,6 +25,64 @@
 
 <div class="system-glow"></div>
 
+<!-- LEVEL UP INTERFACE (Solo Leveling Style) -->
+<div id="level-up-modal">
+    <div class="level-up-card">
+        <div class="lu-title">AVANCEMENT DU SYSTÈME</div>
+        <div style="color:white; font-size: 1.2rem; font-weight: bold; margin-top: 10px;">LEVEL UP</div>
+        <div id="lu-rank-icon" class="lu-rank">D</div>
+        <div id="lu-rank-name" style="color: var(--system-blue); font-weight: 900; text-transform: uppercase; letter-spacing: 2px;">RANG D</div>
+        
+        <div class="lu-stats">
+            <div class="lu-stat-item">
+                <span>ABSTINENCE</span>
+                <span id="stat-abstinence" class="lu-stat-val">0j 0h 0m 0s</span>
+            </div>
+            <div class="lu-stat-item">
+                <span>RANG PRÉCÉDENT</span>
+                <span id="stat-prev-rank" class="lu-stat-val">0j 0h 0m 0s</span>
+            </div>
+            <div class="lu-stat-item">
+                <span>EXERCICES COMPLÉTÉS</span>
+                <span id="stat-total-exos" class="lu-stat-val">0</span>
+            </div>
+        </div>
+
+        <button class="btn btn-system" style="margin-top: 20px; background: var(--system-blue);" onclick="closeLevelUp()">CONTINUER</button>
+    </div>
+</div>
+
+<!-- BURGER MENU -->
+<div class="burger-menu" onclick="toggleAbout()">
+    <div style="width: 20px; height: 2px; background: var(--text); margin: 4px 0;"></div>
+    <div style="width: 20px; height: 2px; background: var(--text); margin: 4px 0;"></div>
+    <div style="width: 20px; height: 2px; background: var(--text); margin: 4px 0;"></div>
+</div>
+
+<div class="overlay" id="overlay" onclick="toggleAbout()"></div>
+
+<div class="about-panel" id="about-panel">
+    <div class="about-header">
+        <div class="system-title">Informations Système</div>
+        <h2 style="margin: 5px 0;">S-SYSTEM v3.0</h2>
+    </div>
+    <div class="about-content">
+        <h4>Concept</h4>
+        <p>Inspiré du "Solo Leveling", ce système transforme ta discipline physique et mentale en un RPG de survie réel. Tu ne t'entraînes pas seulement, tu montes en niveau.</p>
+        
+        <h4>Le Système de Rangs</h4>
+        <p>Ta progression est mesurée en LP (Level Points). Chaque exercice validé te rapproche du rang supérieur. Attention : le système est impitoyable.</p>
+        
+        <h4>Pénalités de Purge</h4>
+        <p>Le 1er jour de chaque mois pair, une purge système est lancée. Si tu as été inactif, tu subiras une dégradation de <strong>-200 LP</strong>. La survie demande de la constance.</p>
+        
+        <h4>Échec de Mission</h4>
+        <p>Céder à tes addictions ou briser ta discipline réinitialise ton compteur de temps de survie. Ton arbre d'évolution repassera à l'état de graine 🌱.</p>
+        
+        <button class="btn btn-system" style="margin-top: 30px;" onclick="toggleAbout()">Fermer</button>
+    </div>
+</div>
+
 <div class="container">
     <div class="sidebar">
         <div class="card">
