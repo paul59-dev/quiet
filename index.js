@@ -59,13 +59,11 @@ function toggleAbout() {
         RANKS.forEach((r, i) => { if (newPoints >= r.min) newRankIndex = i; });
 
         if (newRankIndex > state.currentRankIndex) {
-            // Montée de niveau
             showLevelUpUI(newRankIndex);
             state.currentRankIndex = newRankIndex;
             state.lastRankChangeDate = Date.now();
             save();
         } else if (newRankIndex < state.currentRankIndex) {
-            // RÉTROGRADATION (Nouveau)
             showRankDownUI(newRankIndex);
             state.currentRankIndex = newRankIndex;
             state.lastRankChangeDate = Date.now();
@@ -74,7 +72,6 @@ function toggleAbout() {
     }
 
     function showLevelUpUI(rankIdx) {
-        // Reset styles au cas où une purge est passée par là
         document.getElementById('lu-header-title').innerText = "AVANCEMENT DU SYSTÈME";
         document.getElementById('lu-main-label').innerText = "LEVEL UP";
         document.getElementById('lu-main-label').style.color = "white";
@@ -115,7 +112,6 @@ function toggleAbout() {
     }
 
     function showPenaltyUI() {
-        // Personnalisation de la pop-up existante pour la pénalité
         document.getElementById('lu-header-title').innerText = "ALERTE DU SYSTÈME";
         document.getElementById('lu-main-label').innerText = "QUÊTE DE PÉNALITÉ";
         document.getElementById('lu-main-label').style.color = "#ff0033";
@@ -140,7 +136,6 @@ function toggleAbout() {
     }
 
     function showRankDownUI(rankIdx) {
-        // Personnalisation de la pop-up pour la rétrogradation
         document.getElementById('lu-header-title').innerText = "AVERTISSEMENT DU SYSTÈME";
         document.getElementById('lu-main-label').innerText = "RÉTROGRADATION";
         document.getElementById('lu-main-label').style.color = "#ff0033";
@@ -171,7 +166,6 @@ function toggleAbout() {
 
     function closeLevelUp() {
         document.getElementById('level-up-modal').style.display = 'none';
-        // Reset couleur bouton au cas où c'était une pénalité
         document.getElementById('lu-close-btn').style.background = "var(--system-blue)";
         document.getElementById('stat-abstinence').style.color = "var(--system-blue)";
     }
@@ -196,7 +190,7 @@ function toggleAbout() {
             state.points = Math.max(0, state.points - 200);
             localStorage.setItem(penaltyKey, "done"); 
             save();
-            showPenaltyUI(); // Utilise la pop-up au lieu de l'alert
+            showPenaltyUI();
             updateUI();
         }
     }
@@ -317,25 +311,153 @@ function toggleAbout() {
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
+    function changeMonth(dir) {
+        currentViewDate.setMonth(currentViewDate.getMonth() + dir);
+        renderCalendar();
+    }
+
+    function resetAddiction() {
+        if(confirm("ALERTE SYSTÈME : Confirmer l'échec de mission ? Votre temps de survie sera réinitialisé.")) {
+            state.startDate = Date.now();
+            state.lastRankChangeDate = Date.now();
+            save();
+            alert("Mission échouée. Compteur réinitialisé. Redoublez d'efforts.");
+        }
+    }
+
+    /* --- NOUVELLES FONCTIONS DE SAUVEGARDE ET EXPORT --- */
+
+    function exportData() {
+        const dataStr = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
+        document.getElementById('backup-io').value = dataStr;
+        alert("Code système généré avec succès dans la zone de texte ! Copiez-le.");
+    }
+
+    function downloadBackup() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `s_system_backup_${getT()}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function importData() {
+        const code = document.getElementById('backup-io').value.trim();
+        if(!code) return alert("Veuillez coller un code valide d'abord.");
+        try {
+            const parsed = JSON.parse(decodeURIComponent(escape(atob(code))));
+            if(parsed && typeof parsed === 'object' && 'points' in parsed) {
+                state = parsed;
+                save();
+                alert("Données du système synchronisées avec succès !");
+                location.reload();
+            } else {
+                alert("Format de code invalide.");
+            }
+        } catch(e) {
+            alert("Erreur lors du décodage du code système.");
+        }
+    }
+
+    function importFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                if(parsed && typeof parsed === 'object' && 'points' in parsed) {
+                    state = parsed;
+                    save();
+                    alert("Fichier d'archives restauré avec succès !");
+                    location.reload();
+                } else {
+                    alert("Le fichier JSON ne contient pas de données S-SYSTEM valides.");
+                }
+            } catch(err) {
+                alert("Erreur de lecture du fichier JSON.");
+            }
+        };
+        reader.readAsText(file);
+    }
+
     function updateTimer() {
         const diff = Date.now() - state.startDate;
-        const d = Math.floor(diff/86400000);
+        const d = Math.floor(diff / 86400000);
         const h = Math.floor((diff / 3600000) % 24).toString().padStart(2, '0');
         const m = Math.floor((diff / 60000) % 60).toString().padStart(2, '0');
         const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+        
         document.getElementById('timer').innerText = `${d}j ${h}h ${m}m ${s}s`;
+        
         const treeIcon = document.getElementById('tree-icon');
-        if (d >= 100) treeIcon.innerText = "👑"; else if (d >= 30) treeIcon.innerText = "🌳"; else if (d >= 7) treeIcon.innerText = "🌿"; else if (d >= 1) treeIcon.innerText = "🍃"; else treeIcon.innerText = "🌱";
+        if (treeIcon) {
+            if (d >= 100) treeIcon.innerText = "👑"; 
+            else if (d >= 30) treeIcon.innerText = "🌳"; 
+            else if (d >= 7) treeIcon.innerText = "🌿"; 
+            else if (d >= 1) treeIcon.innerText = "🍃"; 
+            else treeIcon.innerText = "🌱";
+        }
     }
 
-    function resetAddiction() { if(confirm("CONFIRMER ÉCHEC ?")) { state.startDate = Date.now(); save(); updateTimer(); } }
-    function changeMonth(dir) { currentViewDate.setMonth(currentViewDate.getMonth() + dir); renderCalendar(); }
+    function resetAddiction() { 
+        if (confirm("CONFIRMER ÉCHEC ?")) { 
+            state.startDate = Date.now(); 
+            save(); 
+            updateTimer(); 
+        } 
+    }
 
-    // Init
+    function updateTimer() {
+        const diff = Date.now() - state.startDate;
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff / 3600000) % 24).toString().padStart(2, '0');
+        const m = Math.floor((diff / 60000) % 60).toString().padStart(2, '0');
+        const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+        
+        document.getElementById('timer').innerText = `${d}j ${h}h ${m}m ${s}s`;
+        
+        const treeIcon = document.getElementById('tree-icon');
+        if (treeIcon) {
+            if (d >= 100) treeIcon.innerText = "👑"; 
+            else if (d >= 30) treeIcon.innerText = "🌳"; 
+            else if (d >= 7) treeIcon.innerText = "🌿"; 
+            else if (d >= 1) treeIcon.innerText = "🍃"; 
+            else treeIcon.innerText = "🌱";
+        }
+    }
+
+    function resetAddiction() { 
+        if (confirm("CONFIRMER ÉCHEC ?")) { 
+            state.startDate = Date.now(); 
+            save(); 
+            updateTimer(); 
+        } 
+    }
+
+    function changeMonth(dir) { 
+        currentViewDate.setMonth(currentViewDate.getMonth() + dir); 
+        renderCalendar(); 
+    }
+
+    // --- INITIALISATION DU SYSTÈME ---
+    // On s'assure que le mode par défaut est défini avant de lancer les rendus
+    if (!state.mode) {
+        state.mode = 'haut';
+    }
+
+    // Sauvegarde initiale pour fixer l'état propre
     save();
-    setMode(state.mode || 'haut');
+
+    // Lancement des fonctions d'affichage
+    setMode(state.mode);
     checkPointDecay();
     updateUI(); 
     renderCalendar();
-    setInterval(updateTimer, 1000); updateTimer();
+
+    // Gestion des timers (Horloge + Vérification de la Purge)
+    updateTimer();
+    setInterval(updateTimer, 1000); 
     setInterval(checkPointDecay, 60000);
