@@ -1,7 +1,22 @@
-function toggleAbout() {
-        document.getElementById('about-panel').classList.toggle('active');
-        document.getElementById('overlay').classList.toggle('active');
-    }
+const levelUpSound = new Audio('./songs/win.wav');
+    const levelDownSound = new Audio('./songs/down.wav');
+    const levelResetSound = new Audio('./songs/reset.wav');
+
+    function toggleAbout() {
+            const panel = document.getElementById('about-panel');
+            const overlay = document.getElementById('overlay');
+            
+            if (panel && overlay) {
+                panel.classList.toggle('active');
+                overlay.classList.toggle('active');
+            } else {
+                console.error("Le menu ou l'overlay n'a pas été trouvé dans le HTML.");
+            }
+        }
+
+        function toggleMenu() {
+            toggleAbout();
+        }
 
     const EXOS = {
         haut: ["8 Tirage poitrine", "8 Rowing", "8 Développé couché", "8 Tirage Bucheron", "8 Corde", "8 Développé Militaire", "8 Curl Pupitre", "8 Elévation Latérales", "8 Pec Fly"],
@@ -72,6 +87,7 @@ function toggleAbout() {
     }
 
     function showLevelUpUI(rankIdx) {
+        levelUpSound.play();
         document.getElementById('lu-header-title').innerText = "AVANCEMENT DU SYSTÈME";
         document.getElementById('lu-main-label').innerText = "LEVEL UP";
         document.getElementById('lu-main-label').style.color = "white";
@@ -112,6 +128,7 @@ function toggleAbout() {
     }
 
     function showPenaltyUI() {
+        levelResetSound.play();
         document.getElementById('lu-header-title').innerText = "ALERTE DU SYSTÈME";
         document.getElementById('lu-main-label').innerText = "QUÊTE DE PÉNALITÉ";
         document.getElementById('lu-main-label').style.color = "#ff0033";
@@ -136,6 +153,7 @@ function toggleAbout() {
     }
 
     function showRankDownUI(rankIdx) {
+        levelDownSound.play();
         document.getElementById('lu-header-title').innerText = "AVERTISSEMENT DU SYSTÈME";
         document.getElementById('lu-main-label').innerText = "RÉTROGRADATION";
         document.getElementById('lu-main-label').style.color = "#ff0033";
@@ -461,3 +479,10 @@ function toggleAbout() {
     updateTimer();
     setInterval(updateTimer, 1000); 
     setInterval(checkPointDecay, 60000);
+
+    // Débloquer tous les sons dès le premier clic sur l'application
+    document.addEventListener('click', () => {
+        levelUpSound.load();
+        levelDownSound.load();
+        levelResetSound.load();
+    }, { once: true });

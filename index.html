@@ -17,12 +17,10 @@
     <link rel="apple-touch-icon" sizes="152x152" href="icon.svg">
     <link rel="apple-touch-icon" sizes="180x180" href="icon.svg">
 
-    <title>S-SYSTEM | Solo Leveling</title>
+    <title>S-SYSTEM</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div class="system-glow"></div>
 
 <div class="system-glow"></div>
 
@@ -67,7 +65,7 @@
         <div class="system-title">Informations Système</div>
         <h2 style="margin: 5px 0;">S-SYSTEM v3.0</h2>
     </div>
-    <div class="about-content">
+    <!-- <div class="about-content">
         <h4>Concept</h4>
         <p>Inspiré du "Solo Leveling", ce système transforme ta discipline physique et mentale en un RPG de survie réel. Tu ne t'entraînes pas seulement, tu montes en niveau.</p>
         
@@ -81,7 +79,22 @@
         <p>Céder à tes addictions ou briser ta discipline réinitialise ton compteur de temps de survie. Ton arbre d'évolution repassera à l'état de graine 🌱.</p>
         
         <button class="btn btn-system" style="margin-top: 30px;" onclick="toggleAbout()">Fermer</button>
-    </div>
+    </div> -->
+    <div class="about-content" style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+            <!-- Lien actif (Page actuelle) -->
+            <a href="pre-test.html" style="color: var(--rank-color); text-decoration: none; font-weight: bold; border-left: 3px solid var(--rank-color); padding-left: 10px;">
+                1. S-SYSTEM (Principal) ✔
+            </a>
+            <!-- Lien vers Eveil -->
+            <a href="./eveilGestion/gestion.html" style="color: #fff; text-decoration: none; padding-left: 13px;">
+                2. ÉVEIL BUDGET
+            </a>
+            <!-- Lien vers À Propos -->
+            <a href="./a_propos/a_propos.html" style="color: #fff; text-decoration: none; padding-left: 13px;">
+                3. À PROPOS / INFOS
+            </a>
+        </div>
+        <button class="btn btn-system" style="margin-top: 40px; width: 100%;" onclick="toggleMenu()">Fermer</button>
 </div>
 
 <div class="container">
@@ -107,11 +120,11 @@
             <div style="margin-top: 30px; border-top: 1px dashed var(--border); padding-top: 20px;">
                 <div class="system-title">Archives du Système</div>
                 <button class="btn btn-system" onclick="exportData()">Générer Code</button>
-                <button class="btn btn-system" onclick="downloadBackup()" style="background: #1e293b; color: #fff; border: 1px solid var(--border);">Télécharger Fichier</button>
+                <!-- <button class="btn btn-system" onclick="downloadBackup()" style="background: #1e293b; color: #fff; border: 1px solid var(--border);">Télécharger Fichier</button> -->
                 <textarea id="backup-io" class="backup-input" placeholder="Collez un code ici..."></textarea>
                 <button class="btn btn-danger" style="font-size:0.6rem" onclick="importData()">Restaurer via Code</button>
-                <label for="file-input" class="btn btn-danger" style="display: block; text-align: center; line-height: 1.5; font-size:0.6rem">Restaurer via Fichier</label>
-                <input type="file" id="file-input" style="display:none" accept=".json" onchange="importFile(event)">
+                <!-- <label for="file-input" class="btn btn-danger" style="display: block; text-align: center; line-height: 1.5; font-size:0.6rem">Restaurer via Fichier</label>
+                <input type="file" id="file-input" style="display:none" accept=".json" onchange="importFile(event)"> -->
             </div>
         </div>
     </div>

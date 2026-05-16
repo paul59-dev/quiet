@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>À Propos - S-SYSTEM</title>
+    
+    <style>
+        :root {
+            --bg: #05070a;
+            --card: #0d1117;
+            --text: #f8fafc;
+            --text-dim: #64748b;
+            --border: rgba(255, 255, 255, 0.08);
+            --system-blue: #00f2ff;
+            --eveil-green: #22c55e;
+            --accent-color: #a855f7; /* Couleur violette spécifique pour la page d'infos */
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        /* --- ANIMATIONS (MÊME STYLE GLOBAL) --- */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .container { 
+            width: 100%; 
+            max-width: 800px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+            z-index: 1; 
+            animation: fadeIn 0.8s ease-out;
+            margin-top: 50px; /* Espace pour ne pas chevaucher le bouton burger */
+        }
+
+        .main-content { animation: slideUp 0.8s ease-out; }
+
+        /* --- BURGER BUTTON --- */
+        .burger-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            cursor: pointer;
+            background: rgba(13, 17, 23, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            transition: 0.3s;
+        }
+        .burger-menu:hover { border-color: var(--accent-color); }
+
+        /* --- SLIDE PANEL (OUVERTURE À DROITE CLONÉE) --- */
+        .about-panel {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 400px;
+            height: 100%;
+            background: var(--card);
+            z-index: 101;
+            padding: 40px 25px;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.8);
+            transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-left: 1px solid var(--accent-color);
+        }
+
+        .about-panel.active { right: 0; }
+
+        /* --- OVERLAY --- */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+        .overlay.active { display: block; }
+
+        /* --- CONTENU DU MENU --- */
+        .about-header { border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px; }
+        .system-title { font-size: 0.65rem; letter-spacing: 3px; color: var(--accent-color); text-transform: uppercase; margin-bottom: 10px; font-weight: 800; }
+        .about-content { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        
+        .menu-link {
+            text-decoration: none;
+            padding-left: 13px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+        /* --- DESIGN DES CARTES DE LA PAGE --- */
+        .card {
+            background: rgba(13, 17, 23, 0.85);
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(20px);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 10px 0;
+            color: var(--text);
+        }
+
+        .section-subtitle {
+            color: var(--accent-color);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+        p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text-dim);
+            margin: 0 0 15px 0;
+        }
+
+        .btn-panel-close { 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            font-size: 0.7rem; 
+            width: 100%; 
+            transition: 0.3s; 
+            margin-top: 40px;
+            background: var(--accent-color); 
+            color: #fff; 
+        }
+        .btn-panel-close:hover { opacity: 0.9; }
+
+        /* --- GLOW EN ARRIÈRE PLAN --- */
+        .system-glow {
+            position: fixed;
+            top: -250px;
+            right: -250px;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, var(--accent-color) 0%, rgba(0,0,0,0) 75%);
+            filter: blur(60px);
+            border-radius: 50%;
+            opacity: 0.2;
+            z-index: -1;
+            pointer-events: none;
+            animation: pulseGlow 3s infinite alternate ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(1); opacity: 0.15; }
+            100% { transform: scale(1.1); opacity: 0.25; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="system-glow"></div>
+
+<!-- BURGER MENU -->
+<div class="burger-menu" onclick="toggleAbout()">
+    <div style="width: 20px; height: 2px; background: var(--text); margin: 4px 0;"></div>
+    <div style="width: 20px; height: 2px; background: var(--text); margin: 4px 0;"></div>
+    <div style="width: 20px; height: 2px; background: var(--text); margin: 4px 0;"></div>
+</div>
+
+<!-- EFFET D'ARRIÈRE PLAN FLOU CLIQUEUR -->
+<div class="overlay" id="overlay" onclick="toggleAbout()"></div>
+
+<!-- PANNEAU COULISSANT DROIT -->
+<div class="about-panel" id="about-panel">
+    <div class="about-header">
+        <div class="system-title">Menu Général</div>
+        <h2 style="margin: 5px 0;">S-SYSTEM Suite</h2>
+    </div>
+    
+    <div class="about-content">
+        <!-- Lien vers S-System -->
+        <a href="../index.html" style="color: #fff;" class="menu-link">
+            1. S-SYSTEM (Principal)
+        </a>
+        <!-- Lien vers Eveil -->
+        <a href="../eveilGestion/gestion.html" style="color: #fff;" class="menu-link">
+            2. ÉVEIL BUDGET
+        </a>
+        <!-- Lien actif (Page À Propos actuelle) -->
+        <a href="apropos.html" style="color: var(--accent-color); font-weight: bold; border-left: 3px solid var(--accent-color); padding-left: 10px;" class="menu-link">
+            3. À PROPOS / INFOS ✔
+        </a>
+    </div>
+    
+    <button class="btn-panel-close" onclick="toggleAbout()">Fermer</button>
+</div>
+
+<!-- CONTENU PRINCIPAL DE LA PAGE -->
+<div class="container">
+    <div class="main-content">
+        
+        <!-- CARTE 1 : PRÉPARATION -->
+        <div class="card">
+            <div class="section-subtitle">Informations générales</div>
+            <h1 class="page-title">À Propos du Projet</h1>
+            <p>Bienvenue sur votre écosystème applicatif personnel. Cet ensemble d'outils est conçu pour centraliser la gestion de vos objectifs, le suivi de vos routines quotidiennes, ainsi que le contrôle rigoureux de vos finances.</p>
+            <p>Chaque brique de l'application fonctionne de manière autonome tout en conservant une identité visuelle commune, sombre, futuriste et optimisée pour une navigation rapide.</p>
+        </div>
+
+        <!-- CARTE 2 : DÉTAILS DES MODULES -->
+        <div class="card">
+            <div class="section-subtitle">Architecture de l'écosystème</div>
+            <h2 style="margin: 0 0 15px 0; font-weight: 800; font-size: 1.3rem;">Les Modules Disponibles</h2>
+            
+            <div style="margin-bottom: 20px; border-left: 2px solid var(--system-blue); padding-left: 15px;">
+                <h3 style="margin: 0 0 5px 0; font-size: 1rem; color: var(--system-blue);">1. S-SYSTEM</h3>
+                <p style="margin: 0;">Inspiré des mécaniques de RPG, ce module gère le suivi de votre discipline physique, vos entraînements et vos paliers d'évolution sous forme de points d'expérience (LP).</p>
+            </div>
+
+            <div style="margin-bottom: 5px; border-left: 2px solid var(--eveil-green); padding-left: 15px;">
+                <h3 style="margin: 0 0 5px 0; font-size: 1rem; color: var(--eveil-green);">2. ÉVEIL BUDGET</h3>
+                <p style="margin: 0;">Une interface épurée dédiée à la gestion financière. Elle vous permet de piloter vos revenus, de catégoriser vos dépenses récurrentes, et de sécuriser votre épargne.</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- SCRIPT DE NAVIGATION SYNCHRONISÉ -->
+<script>
+    function toggleAbout() {
+        const panel = document.getElementById('about-panel');
+        const overlay = document.getElementById('overlay');
+        
+        if (panel && overlay) {
+            panel.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+    }
+
+    // Double sécurité au cas où un ancien lien appelle toggleMenu()
+    function toggleMenu() {
+        toggleAbout();
+    }
+</script>
+
+</body>
+</html>
