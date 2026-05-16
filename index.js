@@ -1,6 +1,6 @@
-const levelUpSound = new Audio('./songs/win.wav');
-    const levelDownSound = new Audio('./songs/down.wav');
-    const levelResetSound = new Audio('./songs/reset.wav');
+const levelUpSound = new Audio('win.wav');
+    const levelDownSound = new Audio('down.wav');
+    const levelResetSound = new Audio('reset.wav');
 
     function toggleAbout() {
             const panel = document.getElementById('about-panel');
@@ -19,10 +19,37 @@ const levelUpSound = new Audio('./songs/win.wav');
         }
 
     const EXOS = {
-        haut: ["8 Tirage poitrine", "8 Rowing", "8 Développé couché", "8 Tirage Bucheron", "8 Corde", "8 Développé Militaire", "8 Curl Pupitre", "8 Elévation Latérales", "8 Pec Fly"],
-        bas: ["8 Presse à Cuisse", "8 Leg Extension", "8 Leg Curl"],
-        maison: ["8 Squats Sautés", "1min Montain Climber", "8 Burpees", "1min Étirements"],
-        bonus: ["5min Marche à pied", "5min Course", "5min Marche Inclinée", "10min Vélo", "5min Saut à la corde"]
+        haut: [
+            { name: "Tirage poitrine", hasKg: true },
+            { name: "Rowing", hasKg: true },
+            { name: "Développé couché", hasKg: true },
+            { name: "Tirage Bucheron", hasKg: true },
+            { name: "Corde", hasKg: true },
+            { name: "Développé Militaire", hasKg: true },
+            { name: "Curl Pupitre", hasKg: true },
+            { name: "Elévation Latérales", hasKg: true },
+            { name: "Pec Fly", hasKg: true }
+        ],
+        bas: [
+            { name: "Presse à Cuisse", hasKg: true },
+            { name: "Leg Extension", hasKg: true },
+            { name: "Leg Curl", hasKg: true }
+        ],
+        maison: [
+            { name: "Squats Sautés" },
+            { name: "Montain Climber (min)" },
+            { name: "Burpees" },
+            { name: "Étirements (min)" },
+            { name: "Ménage", hasReps: false }
+        ],
+        bonus: [
+            { name: "Marche à pied (min)" },
+            { name: "Course (min)" },
+            { name: "Marche Inclinée (min)" },
+            { name: "Vélo (min)" },
+            { name: "Saut à la corde" },
+            { name: "12h de Jeune", hasReps: false }
+        ]
     };
 
     const RANKS = [
@@ -205,7 +232,7 @@ const levelUpSound = new Audio('./songs/win.wav');
         if(resetLbl) resetLbl.innerText = `Prochaine purge système dans : ${daysLeft} jours`;
 
         if (isPenaltyDay && localStorage.getItem(penaltyKey) !== "done") {
-            state.points = Math.max(0, state.points - 200);
+            state.points = Math.max(0, state.points - 500);
             localStorage.setItem(penaltyKey, "done"); 
             save();
             showPenaltyUI();
@@ -239,53 +266,125 @@ const levelUpSound = new Audio('./songs/win.wav');
 
     function renderExos() {
         const t = getT();
-        const dayData = state.sportHistory[t];
-        let done = [];
-        if (dayData) {
-            done = Array.isArray(dayData) ? dayData : (dayData.list || []);
-        }
+        let dayData = state.sportHistory[t];
+        
+        if (!dayData) dayData = { list: [], details: {}, color: getCurrentRankColor() };
+        if (Array.isArray(dayData)) dayData = { list: dayData, details: {}, color: getCurrentRankColor() };
+        if (!dayData.details) dayData.details = {};
 
         let rankIndex = 0;
         RANKS.forEach((r, i) => { if (state.points >= r.min) rankIndex = i; });
-        const multipliers = [1, 1, 1.5, 2, 3, 5];
-        const mult = multipliers[rankIndex];
+        
         const listToUse = EXOS[state.mode] || EXOS.haut;
-        const currentModeDone = done.filter(id => id.startsWith(state.mode + '-'));
+        const currentModeDone = dayData.list.filter(id => id.startsWith(state.mode + '-'));
 
         document.getElementById('exo-list').innerHTML = listToUse.map((ex, i) => {
             const exoID = `${state.mode}-${i}`;
-            const isChecked = done.includes(exoID);
-            const match = ex.match(/^(\d+)(\D+)/);
-            let displayExo = ex;
-            if (match) {
-                const newQty = Math.floor(parseInt(match[1]) * mult);
-                displayExo = `<strong>${newQty}</strong>${match[2]}`;
-            }
-            return `<div class="exo-item ${isChecked ? 'checked' : ''}" onclick="toggleExo('${exoID}')">
-                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="this.parentElement.click()">
-                <div class="exo-text" style="${rankIndex >= 4 ? 'color:var(--rank-color); font-weight:bold;' : ''}">${displayExo}</div>
+            const isChecked = dayData.list.includes(exoID);
+            
+            // Plus de calcul "fixed", c'est 10 par défaut si rien n'est écrit, ou vide si hasReps est faux
+            const defaultReps = ex.hasReps === false ? "" : 10;
+            const savedReps = dayData.details[exoID]?.reps !== undefined ? dayData.details[exoID].reps : defaultReps;
+
+            return `<div class="exo-item ${isChecked ? 'checked' : ''}" onclick="toggleExo('${exoID}', event)">
+                <!-- Zone Gauche : Checkbox + Reps libres + Nom -->
+                <div class="exo-left">
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="this.parentElement.parentElement.click()">
+                    
+                    ${ex.hasReps !== false ? `
+                        <div onclick="event.stopPropagation();">
+                            <input type="number" 
+                                class="exo-input-sub" 
+                                id="rep-${exoID}" 
+                                placeholder="Reps" 
+                                value="${savedReps}" 
+                                oninput="updateExoData('${exoID}')" 
+                                title="Répétitions libres">
+                        </div>
+                    ` : ''}
+                    
+                    <div class="exo-text" style="${rankIndex >= 4 ? 'color: var(--rank-color); font-weight: bold;' : ''}">
+                        ${ex.name}
+                    </div>
+                </div>
+
+                <!-- Zone Droite : Les 3 cases KG groupées -->
+                <div class="exo-right-inputs" onclick="event.stopPropagation();">
+                    ${ex.hasKg ? `
+                        <input type="number" class="exo-input-sub" id="kg-${exoID}-1" placeholder="1st kg" value="${dayData.details[exoID]?.kg1 || ''}" oninput="updateExoData('${exoID}')">
+                        <input type="number" class="exo-input-sub" id="kg-${exoID}-2" placeholder="2nd kg" value="${dayData.details[exoID]?.kg2 || ''}" oninput="updateExoData('${exoID}')">
+                        <input type="number" class="exo-input-sub" id="kg-${exoID}-3" placeholder="3rd kg" value="${dayData.details[exoID]?.kg3 || ''}" oninput="updateExoData('${exoID}')">
+                    ` : ''}
+                </div>
             </div>`;
         }).join('');
-        
+
         document.getElementById('exo-count').innerText = `${currentModeDone.length}/${listToUse.length}`;
     }
 
-    function toggleExo(exoID) {
+    function toggleExo(exoID, event) {
+        if (event && event.target.type === 'checkbox') return;
+
         const t = getT();
-        if (!state.sportHistory[t]) state.sportHistory[t] = { list: [], color: getCurrentRankColor() };
-        if (Array.isArray(state.sportHistory[t])) state.sportHistory[t] = { list: state.sportHistory[t], color: getCurrentRankColor() };
-        
-        let dayData = state.sportHistory[t];
-        if (!dayData.list.includes(exoID)) {
-            dayData.list.push(exoID); 
-            state.points += 2;
-            dayData.color = getCurrentRankColor();
-        } else {
-            dayData.list = dayData.list.filter(x => x !== exoID);
-            state.points = Math.max(0, state.points - 2);
+        if (!state.sportHistory[t]) {
+            state.sportHistory[t] = { list: [], details: {}, color: getCurrentRankColor() };
         }
+
+        const dayData = state.sportHistory[t];
+        const index = dayData.list.indexOf(exoID);
+
+        const currentMode = exoID.split('-')[0];
+        const exoIndex = parseInt(exoID.split('-')[1]);
+        const exoConfig = EXOS[currentMode][exoIndex];
+
+        let pointsGagnes = 0;
+
+        // Calcul simplifié : sans exercices imposés (fixed)
+        if (exoConfig.hasReps === false) {
+            pointsGagnes = 5; // Le ménage et le jeûne donnent 5 LP directement
+        } else {
+            const repInput = document.getElementById(`rep-${exoID}`);
+            // Prend la valeur tapée, ou 10 par défaut si l'input est vide
+            pointsGagnes = repInput ? (parseInt(repInput.value) || 0) : 10;
+        }
+
+        if (index === -1) {
+            dayData.list.push(exoID);
+            state.points += pointsGagnes;
+        } else {
+            dayData.list.splice(index, 1);
+            state.points = Math.max(0, state.points - pointsGagnes);
+        }
+
+        save();
         checkLevelUp(state.points);
-        save(); renderExos(); renderCalendar(); updateUI();
+        renderExos();
+        updateUI();
+    }
+
+    function updateExoData(exoID) {
+        const t = getT();
+        if (!state.sportHistory[t]) {
+            state.sportHistory[t] = { list: [], details: {}, color: getCurrentRankColor() };
+        }
+        if (!state.sportHistory[t].details[exoID]) {
+            state.sportHistory[t].details[exoID] = {};
+        }
+
+        // Récupération des répétitions (si l'input existe)
+        const repInput = document.getElementById(`rep-${exoID}`);
+        if (repInput) state.sportHistory[t].details[exoID].reps = parseInt(repInput.value) || 0;
+
+        // Récupération des 3 colonnes de poids distinctes
+        const kg1 = document.getElementById(`kg-${exoID}-1`);
+        const kg2 = document.getElementById(`kg-${exoID}-2`);
+        const kg3 = document.getElementById(`kg-${exoID}-3`);
+
+        if (kg1) state.sportHistory[t].details[exoID].kg1 = kg1.value;
+        if (kg2) state.sportHistory[t].details[exoID].kg2 = kg2.value;
+        if (kg3) state.sportHistory[t].details[exoID].kg3 = kg3.value;
+
+        save();
     }
 
     function renderCalendar() {

@@ -231,3 +231,91 @@
         
         #timer { font-size: 1.6rem; font-weight: 900; letter-spacing: -1px; }
         .backup-input { width: 100%; background: #000; border: 1px solid var(--border); color: #00ff9d; font-family: monospace; padding: 10px; font-size: 0.6rem; border-radius: 4px; margin: 10px 0; min-height: 40px; }
+
+       /* --- DESIGN DES EXERCICES EN 2 LIGNES --- */
+        .exo-item { 
+            background: rgba(255, 255, 255, 0.02); 
+            padding: 12px 16px; 
+            border-radius: 8px; 
+            margin-bottom: 8px; 
+            display: flex; 
+            flex-wrap: wrap; /* Permet le passage à la ligne des éléments */
+            align-items: center; 
+            justify-content: space-between; 
+            border: 1px solid transparent; 
+            cursor: pointer; 
+            transition: 0.2s;
+            gap: 10px 0; /* Écart de 10px en hauteur quand ça passe sur 2 lignes */
+        }
+        .exo-item:hover { background: rgba(255, 255, 255, 0.05); }
+        .exo-item.checked { border: 1px solid var(--rank-color); background: rgba(255, 255, 255, 0.05); opacity: 0.8; }
+        
+        /* Ligne 1 : Prend toute la largeur pour forcer les KG à aller en dessous */
+        .exo-left { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            flex: 1 1 100%; /* Force à prendre 100% de la largeur du container */
+            min-width: 0; 
+        }
+        
+        .exo-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        input[type="checkbox"] { accent-color: var(--rank-color); width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
+        
+        /* Ligne 2 : Le bloc des 3 cases KG */
+        .exo-right-inputs { 
+            display: flex !important; 
+            flex-direction: row !important; /* Force STRICTEMENT l'alignement en ligne (horizontal) */
+            flex-wrap: nowrap !important;   /* Interdit aux cases KG de passer l'une en dessous de l'autre */
+            gap: 6px;                       /* Espace horizontal entre chaque case */
+            align-items: center; 
+            flex: 1 1 100%;                 /* Occupe toute la largeur pour se caler sur la 2ème ligne */
+            justify-content: flex-start;    /* Aligne les 3 cases à gauche */
+            padding-left: 28px;             /* Aligne le bloc sous le texte de l'exercice */
+            margin-top: 5px;                /* Petit espace vertical sous le nom de l'exo */
+        }
+
+        /* --- LES CASES INPUT KG --- */
+        .exo-input-sub { 
+            background: rgba(0, 0, 0, 0.4); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            color: var(--text); 
+            font-family: monospace; 
+            font-size: 0.8rem; 
+            padding: 5px 0; 
+            border-radius: 6px; 
+            width: 50px;                    /* Largeur fixe pour qu'elles restent petites */
+            min-width: 50px;                /* Sécurité pour ne pas qu'elles s'écrasent */
+            text-align: center;
+            transition: all 0.2s;
+            flex-shrink: 0;                 /* Empêche le navigateur de les déformer ou de les empiler */
+        }
+        
+        .exo-input-sub:focus { 
+            border-color: var(--rank-color); 
+            background: rgba(0, 0, 0, 0.6); 
+            outline: none; 
+        }
+        
+        /* Enlève les flèches des inputs de type number */
+        .exo-input-sub::-webkit-inner-spin-button, 
+        .exo-input-sub::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .exo-input-sub { -moz-appearance: textfield; }
+
+        /* --- AJUSTEMENT DES DESIGN INTERFACES PETITS ÉCRANS --- */
+        @media (max-width: 480px) {
+            .exo-item {
+                padding: 10px 12px;
+            }
+            .exo-right-inputs {
+                padding-left: 10px; /* Garde l'alignement sous le texte même sur petit écran */
+            }
+            .exo-input-sub {
+                width: 60px; /* Légère réduction pour être sûr que les 3 rentrent côte à côte sur petit écran */
+                font-size: 0.75rem;
+            }
+        }
