@@ -2,6 +2,9 @@ const levelUpSound = new Audio('./songs/win.wav');
     const levelDownSound = new Audio('./songs/down.wav');
     const levelResetSound = new Audio('./songs/reset.wav');
 
+// CORRECTION COMMUNE POUR MOBILE : Déclaration obligatoire de la variable globale
+    let pendingRankColor = null;
+
     function toggleAbout() {
             const panel = document.getElementById('about-panel');
             const overlay = document.getElementById('overlay');
