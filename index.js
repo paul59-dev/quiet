@@ -2,24 +2,24 @@ const levelUpSound = new Audio('./songs/win.wav');
     const levelDownSound = new Audio('./songs/down.wav');
     const levelResetSound = new Audio('./songs/reset.wav');
 
-// CORRECTION COMMUNE POUR MOBILE : Déclaration obligatoire de la variable globale
+    // Déclaration unique de la variable globale pour mobile
     let pendingRankColor = null;
 
     function toggleAbout() {
-            const panel = document.getElementById('about-panel');
-            const overlay = document.getElementById('overlay');
-            
-            if (panel && overlay) {
-                panel.classList.toggle('active');
-                overlay.classList.toggle('active');
-            } else {
-                console.error("Le menu ou l'overlay n'a pas été trouvé dans le HTML.");
-            }
+        const panel = document.getElementById('about-panel');
+        const overlay = document.getElementById('overlay');
+        
+        if (panel && overlay) {
+            panel.classList.toggle('active');
+            overlay.classList.toggle('active');
+        } else {
+            console.error("Le menu ou l'overlay n'a pas été trouvé dans le HTML.");
         }
+    }
 
-        function toggleMenu() {
-            toggleAbout();
-        }
+    function toggleMenu() {
+        toggleAbout();
+    }
 
     const EXOS = {
         haut: [
@@ -117,7 +117,7 @@ const levelUpSound = new Audio('./songs/win.wav');
     }
 
     function showLevelUpUI(rankIdx) {
-        try { levelUpSound.play().catch(e => console.log("Audio bloqué par le mobile")); } catch(e) {}
+        try { levelUpSound.play().catch(e => console.log("Audio bloqué")); } catch(e) {}
         document.getElementById('lu-header-title').innerText = "AVANCEMENT DU SYSTÈME";
         document.getElementById('lu-main-label').innerText = "LEVEL UP";
         document.getElementById('lu-main-label').style.color = "white";
@@ -129,13 +129,11 @@ const levelUpSound = new Audio('./songs/win.wav');
         const rank = RANKS[targetIdx];
         if (!rank) return;
 
-        // Sauvegarde de la couleur pour la fermeture
         pendingRankColor = rank.color;
 
         document.getElementById('lu-rank-icon').innerText = rank.icon;
         document.getElementById('lu-rank-name').innerText = rank.name;
         
-        // Application locale sur la carte uniquement
         document.getElementById('lu-rank-name').style.color = rank.color;
         document.querySelector('.level-up-card').style.borderColor = rank.color;
         document.querySelector('.level-up-card').style.boxShadow = `0 0 50px ${hexToRgba(rank.color, 0.2)}`;
@@ -144,14 +142,6 @@ const levelUpSound = new Audio('./songs/win.wav');
         if (closeBtn) {
             closeBtn.innerText = "CONTINUER";
             closeBtn.style.background = rank.color;
-        }
-
-        function formatDuration(ms) {
-            const d = Math.floor(ms / 86400000);
-            const h = Math.floor((ms / 3600000) % 24).toString().padStart(2, '0');
-            const m = Math.floor((ms / 60000) % 60).toString().padStart(2, '0');
-            const s = Math.floor((ms / 1000) % 60).toString().padStart(2, '0');
-            return `${d}j ${h}h ${m}m ${s}s`;
         }
 
         document.getElementById('stat-abstinence').innerText = formatDuration(Date.now() - state.startDate);
@@ -167,8 +157,16 @@ const levelUpSound = new Audio('./songs/win.wav');
         document.getElementById('level-up-modal').style.display = 'flex';
     }
 
+    function formatDuration(ms) {
+        const d = Math.floor(ms / 86400000);
+        const h = Math.floor((ms / 3600000) % 24).toString().padStart(2, '0');
+        const m = Math.floor((ms / 60000) % 60).toString().padStart(2, '0');
+        const s = Math.floor((ms / 1000) % 60).toString().padStart(2, '0');
+        return `${d}j ${h}h ${m}m ${s}s`;
+    }
+
     function showPenaltyUI() {
-        try { levelResetSound.play().catch(e => console.log("Audio bloqué par le mobile")); } catch(e) {}
+        try { levelResetSound.play().catch(e => console.log("Audio bloqué")); } catch(e) {}
         document.getElementById('lu-header-title').innerText = "ALERTE DU SYSTÈME";
         document.getElementById('lu-main-label').innerText = "QUÊTE DE PÉNALITÉ";
         document.getElementById('lu-main-label').style.color = "#ff0033";
@@ -176,7 +174,6 @@ const levelUpSound = new Audio('./songs/win.wav');
         document.getElementById('lu-rank-name').innerText = "DÉGRADATION";
         document.getElementById('lu-rank-name').style.color = "#ff0033";
         
-        // Sauvegarde de la couleur rouge d'alerte pour l'application
         pendingRankColor = "#ff0033";
 
         document.getElementById('lu-stat-label-1').innerText = "PENALITÉ";
@@ -202,7 +199,7 @@ const levelUpSound = new Audio('./songs/win.wav');
     }
 
     function showRankDownUI(rankIdx) {
-        try { levelDownSound.play().catch(e => console.log("Audio bloqué par le mobile")); } catch(e) {}
+        try { levelDownSound.play().catch(e => console.log("Audio bloqué")); } catch(e) {}
         document.getElementById('lu-header-title').innerText = "AVERTISSEMENT DU SYSTÈME";
         document.getElementById('lu-main-label').innerText = "RÉTROGRADATION";
         document.getElementById('lu-main-label').style.color = "#ff0033";
@@ -210,7 +207,6 @@ const levelUpSound = new Audio('./songs/win.wav');
         const rank = RANKS[rankIdx];
         if (!rank) return;
 
-        // Sauvegarde de la couleur du nouveau rang inférieur
         pendingRankColor = rank.color;
 
         document.getElementById('lu-rank-icon').innerText = rank.icon;
@@ -240,32 +236,23 @@ const levelUpSound = new Audio('./songs/win.wav');
     }
 
     function closeLevelUp() {
-        // 1. On ferme la modale en priorité absolue
         const modal = document.getElementById('level-up-modal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
+        if (modal) modal.style.display = 'none';
 
-        // 2. On applique la couleur globale sauvegardée de manière sécurisée
         try {
             if (pendingRankColor) {
                 document.documentElement.style.setProperty('--system-blue', pendingRankColor);
             }
         } catch (error) {
-            console.error("Erreur lors de l'application de la couleur globale :", error);
+            console.error("Erreur couleur globale :", error);
         }
         
-        // 3. On remet à zéro les styles temporaires des textes internes
         try {
             const statAbstinence = document.getElementById('stat-abstinence');
-            if (statAbstinence) {
-                statAbstinence.style.color = "white"; 
-            }
+            if (statAbstinence) statAbstinence.style.color = "white"; 
         } catch (error) {
-            console.error("Erreur lors du reset des styles :", error);
+             console.error("Erreur reset styles :", error);
         }
-
-        // 4. On vide la variable temporaire
         pendingRankColor = null;
     }
 
@@ -335,16 +322,12 @@ const levelUpSound = new Audio('./songs/win.wav');
         document.getElementById('exo-list').innerHTML = listToUse.map((ex, i) => {
             const exoID = `${state.mode}-${i}`;
             const isChecked = dayData.list.includes(exoID);
-            
-            // Plus de calcul "fixed", c'est 10 par défaut si rien n'est écrit, ou vide si hasReps est faux
             const defaultReps = ex.hasReps === false ? "" : 10;
             const savedReps = dayData.details[exoID]?.reps !== undefined ? dayData.details[exoID].reps : defaultReps;
 
             return `<div class="exo-item ${isChecked ? 'checked' : ''}" onclick="toggleExo('${exoID}', event)">
-                <!-- Zone Gauche : Checkbox + Reps libres + Nom -->
                 <div class="exo-left">
                     <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="this.parentElement.parentElement.click()">
-                    
                     ${ex.hasReps !== false ? `
                         <div onclick="event.stopPropagation();">
                             <input type="number" 
@@ -356,13 +339,10 @@ const levelUpSound = new Audio('./songs/win.wav');
                                 title="Répétitions libres">
                         </div>
                     ` : ''}
-                    
                     <div class="exo-text" style="${rankIndex >= 4 ? 'color: var(--rank-color); font-weight: bold;' : ''}">
                         ${ex.name}
                     </div>
                 </div>
-
-                <!-- Zone Droite : Les 3 cases KG groupées -->
                 <div class="exo-right-inputs" onclick="event.stopPropagation();">
                     ${ex.hasKg ? `
                         <input type="number" class="exo-input-sub" id="kg-${exoID}-1" placeholder="1st kg" value="${dayData.details[exoID]?.kg1 || ''}" oninput="updateExoData('${exoID}')">
@@ -393,12 +373,10 @@ const levelUpSound = new Audio('./songs/win.wav');
 
         let pointsGagnes = 0;
 
-        // Calcul simplifié : sans exercices imposés (fixed)
         if (exoConfig.hasReps === false) {
-            pointsGagnes = 5; // Le ménage et le jeûne donnent 5 LP directement
+            pointsGagnes = 5; 
         } else {
             const repInput = document.getElementById(`rep-${exoID}`);
-            // Prend la valeur tapée, ou 10 par défaut si l'input est vide
             pointsGagnes = repInput ? (parseInt(repInput.value) || 0) : 10;
         }
 
@@ -425,11 +403,9 @@ const levelUpSound = new Audio('./songs/win.wav');
             state.sportHistory[t].details[exoID] = {};
         }
 
-        // Récupération des répétitions (si l'input existe)
         const repInput = document.getElementById(`rep-${exoID}`);
         if (repInput) state.sportHistory[t].details[exoID].reps = parseInt(repInput.value) || 0;
 
-        // Récupération des 3 colonnes de poids distinctes
         const kg1 = document.getElementById(`kg-${exoID}-1`);
         const kg2 = document.getElementById(`kg-${exoID}-2`);
         const kg3 = document.getElementById(`kg-${exoID}-3`);
@@ -487,16 +463,34 @@ const levelUpSound = new Audio('./songs/win.wav');
         renderCalendar();
     }
 
+    function updateTimer() {
+        const diff = Date.now() - state.startDate;
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff / 3600000) % 24).toString().padStart(2, '0');
+        const m = Math.floor((diff / 60000) % 60).toString().padStart(2, '0');
+        const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+        
+        document.getElementById('timer').innerText = `${d}j ${h}h ${m}m ${s}s`;
+        
+        const treeIcon = document.getElementById('tree-icon');
+        if (treeIcon) {
+            if (d >= 100) treeIcon.innerText = "👑"; 
+            else if (d >= 30) treeIcon.innerText = "🌳"; 
+            else if (d >= 7) treeIcon.innerText = "🌿"; 
+            else if (d >= 1) treeIcon.innerText = "🍃"; 
+            else treeIcon.innerText = "🌱";
+        }
+    }
+
     function resetAddiction() {
         if(confirm("ALERTE SYSTÈME : Confirmer l'échec de mission ? Votre temps de survie sera réinitialisé.")) {
             state.startDate = Date.now();
             state.lastRankChangeDate = Date.now();
             save();
+            updateTimer();
             alert("Mission échouée. Compteur réinitialisé. Redoublez d'efforts.");
         }
     }
-
-    /* --- NOUVELLES FONCTIONS DE SAUVEGARDE ET EXPORT --- */
 
     function exportData() {
         const dataStr = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
@@ -554,86 +548,25 @@ const levelUpSound = new Audio('./songs/win.wav');
         reader.readAsText(file);
     }
 
-    function updateTimer() {
-        const diff = Date.now() - state.startDate;
-        const d = Math.floor(diff / 86400000);
-        const h = Math.floor((diff / 3600000) % 24).toString().padStart(2, '0');
-        const m = Math.floor((diff / 60000) % 60).toString().padStart(2, '0');
-        const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
-        
-        document.getElementById('timer').innerText = `${d}j ${h}h ${m}m ${s}s`;
-        
-        const treeIcon = document.getElementById('tree-icon');
-        if (treeIcon) {
-            if (d >= 100) treeIcon.innerText = "👑"; 
-            else if (d >= 30) treeIcon.innerText = "🌳"; 
-            else if (d >= 7) treeIcon.innerText = "🌿"; 
-            else if (d >= 1) treeIcon.innerText = "🍃"; 
-            else treeIcon.innerText = "🌱";
-        }
-    }
-
-    function resetAddiction() { 
-        if (confirm("CONFIRMER ÉCHEC ?")) { 
-            state.startDate = Date.now(); 
-            save(); 
-            updateTimer(); 
-        } 
-    }
-
-    function updateTimer() {
-        const diff = Date.now() - state.startDate;
-        const d = Math.floor(diff / 86400000);
-        const h = Math.floor((diff / 3600000) % 24).toString().padStart(2, '0');
-        const m = Math.floor((diff / 60000) % 60).toString().padStart(2, '0');
-        const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
-        
-        document.getElementById('timer').innerText = `${d}j ${h}h ${m}m ${s}s`;
-        
-        const treeIcon = document.getElementById('tree-icon');
-        if (treeIcon) {
-            if (d >= 100) treeIcon.innerText = "👑"; 
-            else if (d >= 30) treeIcon.innerText = "🌳"; 
-            else if (d >= 7) treeIcon.innerText = "🌿"; 
-            else if (d >= 1) treeIcon.innerText = "🍃"; 
-            else treeIcon.innerText = "🌱";
-        }
-    }
-
-    function resetAddiction() { 
-        if (confirm("CONFIRMER ÉCHEC ?")) { 
-            state.startDate = Date.now(); 
-            save(); 
-            updateTimer(); 
-        } 
-    }
-
-    function changeMonth(dir) { 
-        currentViewDate.setMonth(currentViewDate.getMonth() + dir); 
-        renderCalendar(); 
-    }
-
-    // --- INITIALISATION DU SYSTÈME ---
-    // On s'assure que le mode par défaut est défini avant de lancer les rendus
+    // --- INITIALISATION UNIQUE DU SYSTÈME ---
     if (!state.mode) {
         state.mode = 'haut';
     }
 
-    // Sauvegarde initiale pour fixer l'état propre
     save();
 
-    // Lancement des fonctions d'affichage
+    // Lancement propre et séquentiel de l'interface
     setMode(state.mode);
     checkPointDecay();
     updateUI(); 
     renderCalendar();
-
-    // Gestion des timers (Horloge + Vérification de la Purge)
     updateTimer();
+
+    // Intervalles uniques
     setInterval(updateTimer, 1000); 
     setInterval(checkPointDecay, 60000);
 
-    // Débloquer tous les sons dès le premier clic sur l'application
+    // Gestions des audios
     document.addEventListener('click', () => {
         levelUpSound.load();
         levelDownSound.load();
