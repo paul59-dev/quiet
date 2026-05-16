@@ -1,9 +1,28 @@
-const levelUpSound = new Audio('./songs/win.wav');
-    const levelDownSound = new Audio('./songs/down.wav');
-    const levelResetSound = new Audio('./songs/reset.wav');
+// 1. Chemins nettoyés (sans le point initial qui peut perdre le navigateur mobile)
+    const levelUpSound = new Audio('songs/win.wav');
+    const levelDownSound = new Audio('songs/down.wav');
+    const levelResetSound = new Audio('songs/reset.wav');
 
-    // Déclaration unique de la variable globale pour mobile
+    // Variable globale mobile
     let pendingRankColor = null;
+
+    // FORÇAGE AUDIO MOBILE : On débloque les pistes au premier clic de l'utilisateur
+    function unlockAudio() {
+        const sounds = [levelUpSound, levelDownSound, levelResetSound];
+        sounds.forEach(sound => {
+            sound.play()
+                .then(() => {
+                    sound.pause();
+                    sound.currentTime = 0;
+                })
+                .catch(e => console.log("Audio en attente de déblocage complet"));
+        });
+        // On retire l'écouteur pour ne pas répéter cette action inutilement
+        document.removeEventListener('click', unlockAudio);
+        document.removeEventListener('touchstart', unlockAudio);
+    }
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio); // Prise en compte du tactile mobile
 
     function toggleAbout() {
         const panel = document.getElementById('about-panel');
@@ -116,14 +135,24 @@ const levelUpSound = new Audio('./songs/win.wav');
         }
     }
 
+    // Sécurisation des injections de textes pour éviter les crashs si l'HTML est incomplet
+    function safeSetText(id, text) {
+        const el = document.getElementById(id);
+        if (el) el.innerText = text;
+    }
+
     function showLevelUpUI(rankIdx) {
-        try { levelUpSound.play().catch(e => console.log("Audio bloqué")); } catch(e) {}
-        document.getElementById('lu-header-title').innerText = "AVANCEMENT DU SYSTÈME";
-        document.getElementById('lu-main-label').innerText = "LEVEL UP";
-        document.getElementById('lu-main-label').style.color = "white";
-        document.getElementById('lu-stat-label-1').innerText = "ABSTINENCE";
-        document.getElementById('lu-stat-label-2').innerText = "RANG PRÉCÉDENT";
-        document.getElementById('lu-stat-label-3').innerText = "EXERCICES COMPLÉTÉS";
+        try { levelUpSound.play().catch(e => console.log("Audio bloqué ou indisponible")); } catch(e) {}
+        
+        safeSetText('lu-header-title', "AVANCEMENT DU SYSTÈME");
+        safeSetText('lu-main-label', "LEVEL UP");
+        
+        const mainLabel = document.getElementById('lu-main-label');
+        if (mainLabel) mainLabel.style.color = "white";
+
+        safeSetText('lu-stat-label-1', "ABSTINENCE");
+        safeSetText('lu-stat-label-2', "RANG PRÉCÉDENT");
+        safeSetText('lu-stat-label-3', "EXERCICES COMPLÉTÉS");
 
         const targetIdx = (rankIdx !== undefined) ? rankIdx : state.currentRankIndex;
         const rank = RANKS[targetIdx];
@@ -131,12 +160,17 @@ const levelUpSound = new Audio('./songs/win.wav');
 
         pendingRankColor = rank.color;
 
-        document.getElementById('lu-rank-icon').innerText = rank.icon;
-        document.getElementById('lu-rank-name').innerText = rank.name;
+        safeSetText('lu-rank-icon', rank.icon);
+        safeSetText('lu-rank-name', rank.name);
         
-        document.getElementById('lu-rank-name').style.color = rank.color;
-        document.querySelector('.level-up-card').style.borderColor = rank.color;
-        document.querySelector('.level-up-card').style.boxShadow = `0 0 50px ${hexToRgba(rank.color, 0.2)}`;
+        const rankName = document.getElementById('lu-rank-name');
+        if (rankName) rankName.style.color = rank.color;
+
+        const card = document.querySelector('.level-up-card');
+        if (card) {
+            card.style.borderColor = rank.color;
+            card.style.boxShadow = `0 0 50px ${hexToRgba(rank.color, 0.2)}`;
+        }
         
         const closeBtn = document.getElementById('lu-close-btn');
         if (closeBtn) {
@@ -144,17 +178,18 @@ const levelUpSound = new Audio('./songs/win.wav');
             closeBtn.style.background = rank.color;
         }
 
-        document.getElementById('stat-abstinence').innerText = formatDuration(Date.now() - state.startDate);
-        document.getElementById('stat-prev-rank').innerText = formatDuration(Date.now() - (state.lastRankChangeDate || state.startDate));
+        safeSetText('stat-abstinence', formatDuration(Date.now() - state.startDate));
+        safeSetText('stat-prev-rank', formatDuration(Date.now() - (state.lastRankChangeDate || state.startDate)));
 
         let totalExos = 0;
         Object.values(state.sportHistory).forEach(dayData => {
             const list = Array.isArray(dayData) ? dayData : (dayData.list || []);
             totalExos += list.length;
         });
-        document.getElementById('stat-total-exos').innerText = totalExos;
+        safeSetText('stat-total-exos', totalExos);
 
-        document.getElementById('level-up-modal').style.display = 'flex';
+        const modal = document.getElementById('level-up-modal');
+        if (modal) modal.style.display = 'flex';
     }
 
     function formatDuration(ms) {
@@ -167,24 +202,31 @@ const levelUpSound = new Audio('./songs/win.wav');
 
     function showPenaltyUI() {
         try { levelResetSound.play().catch(e => console.log("Audio bloqué")); } catch(e) {}
-        document.getElementById('lu-header-title').innerText = "ALERTE DU SYSTÈME";
-        document.getElementById('lu-main-label').innerText = "QUÊTE DE PÉNALITÉ";
-        document.getElementById('lu-main-label').style.color = "#ff0033";
-        document.getElementById('lu-rank-icon').innerText = "!";
-        document.getElementById('lu-rank-name').innerText = "DÉGRADATION";
-        document.getElementById('lu-rank-name').style.color = "#ff0033";
+        safeSetText('lu-header-title', "ALERTE DU SYSTÈME");
+        safeSetText('lu-main-label', "QUÊTE DE PÉNALITÉ");
+        
+        const mainLbl = document.getElementById('lu-main-label');
+        if (mainLbl) mainLbl.style.color = "#ff0033";
+        
+        safeSetText('lu-rank-icon', "!");
+        safeSetText('lu-rank-name', "DÉGRADATION");
+        
+        const rName = document.getElementById('lu-rank-name');
+        if (rName) rName.style.color = "#ff0033";
         
         pendingRankColor = "#ff0033";
 
-        document.getElementById('lu-stat-label-1').innerText = "PENALITÉ";
-        document.getElementById('stat-abstinence').innerText = "-200 LP";
-        document.getElementById('stat-abstinence').style.color = "#ff0033";
+        safeSetText('lu-stat-label-1', "PENALITÉ");
+        safeSetText('stat-abstinence', "-200 LP");
         
-        document.getElementById('lu-stat-label-2').innerText = "MOTIF";
-        document.getElementById('stat-prev-rank').innerText = "PURGE MENSUELLE";
+        const statAbs = document.getElementById('stat-abstinence');
+        if (statAbs) statAbs.style.color = "#ff0033";
         
-        document.getElementById('lu-stat-label-3').innerText = "STATUT";
-        document.getElementById('stat-total-exos').innerText = "APPLIQUÉ";
+        safeSetText('lu-stat-label-2', "MOTIF");
+        safeSetText('stat-prev-rank', "PURGE MENSUELLE");
+        
+        safeSetText('lu-stat-label-3', "STATUT");
+        safeSetText('stat-total-exos', "APPLIQUÉ");
 
         const closeBtn = document.getElementById('lu-close-btn');
         if (closeBtn) {
@@ -192,36 +234,46 @@ const levelUpSound = new Audio('./songs/win.wav');
             closeBtn.style.background = "#ff0033";
         }
         
-        document.querySelector('.level-up-card').style.borderColor = "#ff0033";
-        document.querySelector('.level-up-card').style.boxShadow = `0 0 50px rgba(255, 0, 51, 0.2)`;
+        const card = document.querySelector('.level-up-card');
+        if (card) {
+            card.style.borderColor = "#ff0033";
+            card.style.boxShadow = `0 0 50px rgba(255, 0, 51, 0.2)`;
+        }
         
-        document.getElementById('level-up-modal').style.display = 'flex';
+        const modal = document.getElementById('level-up-modal');
+        if (modal) modal.style.display = 'flex';
     }
 
     function showRankDownUI(rankIdx) {
         try { levelDownSound.play().catch(e => console.log("Audio bloqué")); } catch(e) {}
-        document.getElementById('lu-header-title').innerText = "AVERTISSEMENT DU SYSTÈME";
-        document.getElementById('lu-main-label').innerText = "RÉTROGRADATION";
-        document.getElementById('lu-main-label').style.color = "#ff0033";
+        safeSetText('lu-header-title', "AVERTISSEMENT DU SYSTÈME");
+        safeSetText('lu-main-label', "RÉTROGRADATION");
+        
+        const mainLbl = document.getElementById('lu-main-label');
+        if (mainLbl) mainLbl.style.color = "#ff0033";
         
         const rank = RANKS[rankIdx];
         if (!rank) return;
 
         pendingRankColor = rank.color;
 
-        document.getElementById('lu-rank-icon').innerText = rank.icon;
-        document.getElementById('lu-rank-name').innerText = rank.name;
-        document.getElementById('lu-rank-name').style.color = "#ff0033";
+        safeSetText('lu-rank-icon', rank.icon);
+        safeSetText('lu-rank-name', rank.name);
         
-        document.getElementById('lu-stat-label-1').innerText = "STATUT";
-        document.getElementById('stat-abstinence').innerText = "RANG INFÉRIEUR";
-        document.getElementById('stat-abstinence').style.color = "#ff0033";
+        const rName = document.getElementById('lu-rank-name');
+        if (rName) rName.style.color = "#ff0033";
         
-        document.getElementById('lu-stat-label-2').innerText = "ANCIEN RANG";
-        document.getElementById('stat-prev-rank').innerText = RANKS[rankIdx + 1] ? RANKS[rankIdx + 1].name : "Inconnu";
+        safeSetText('lu-stat-label-1', "STATUT");
+        safeSetText('stat-abstinence', "RANG INFÉRIEUR");
         
-        document.getElementById('lu-stat-label-3').innerText = "MESSAGE";
-        document.getElementById('stat-total-exos').innerText = "LA FORCE DIMINUE...";
+        const statAbs = document.getElementById('stat-abstinence');
+        if (statAbs) statAbs.style.color = "#ff0033";
+        
+        safeSetText('lu-stat-label-2', "ANCIEN RANG");
+        safeSetText('stat-prev-rank', RANKS[rankIdx + 1] ? RANKS[rankIdx + 1].name : "Inconnu");
+        
+        safeSetText('lu-stat-label-3', "MESSAGE");
+        safeSetText('stat-total-exos', "LA FORCE DIMINUE...");
 
         const closeBtn = document.getElementById('lu-close-btn');
         if (closeBtn) {
@@ -229,10 +281,14 @@ const levelUpSound = new Audio('./songs/win.wav');
             closeBtn.style.background = "#ff0033";
         }
         
-        document.querySelector('.level-up-card').style.borderColor = "#ff0033";
-        document.querySelector('.level-up-card').style.boxShadow = `0 0 50px rgba(255, 0, 51, 0.2)`;
+        const card = document.querySelector('.level-up-card');
+        if (card) {
+            card.style.borderColor = "#ff0033";
+            card.style.boxShadow = `0 0 50px rgba(255, 0, 51, 0.2)`;
+        }
         
-        document.getElementById('level-up-modal').style.display = 'flex';
+        const modal = document.getElementById('level-up-modal');
+        if (modal) modal.style.display = 'flex';
     }
 
     function closeLevelUp() {
@@ -298,11 +354,14 @@ const levelUpSound = new Audio('./songs/win.wav');
         let cur = RANKS[0], next = RANKS[1];
         for (let r of RANKS) { if (state.points >= r.min) { cur = r; next = RANKS[RANKS.indexOf(r)+1] || r; } }
         document.documentElement.style.setProperty('--rank-color', cur.color);
-        document.getElementById('rank-medal').innerText = cur.icon;
-        document.getElementById('rank-name').innerText = cur.name;
-        document.getElementById('lp-val').innerText = state.points;
+        
+        safeSetText('rank-medal', cur.icon);
+        safeSetText('rank-name', cur.name);
+        safeSetText('lp-val', state.points);
+
         const prog = next === cur ? 100 : ((state.points - cur.min) / (next.min - cur.min)) * 100;
-        document.getElementById('progress-bar').style.width = `${prog}%`;
+        const progressBar = document.getElementById('progress-bar');
+        if (progressBar) progressBar.style.width = `${prog}%`;
     }
 
     function renderExos() {
@@ -319,41 +378,44 @@ const levelUpSound = new Audio('./songs/win.wav');
         const listToUse = EXOS[state.mode] || EXOS.haut;
         const currentModeDone = dayData.list.filter(id => id.startsWith(state.mode + '-'));
 
-        document.getElementById('exo-list').innerHTML = listToUse.map((ex, i) => {
-            const exoID = `${state.mode}-${i}`;
-            const isChecked = dayData.list.includes(exoID);
-            const defaultReps = ex.hasReps === false ? "" : 10;
-            const savedReps = dayData.details[exoID]?.reps !== undefined ? dayData.details[exoID].reps : defaultReps;
+        const exoListEl = document.getElementById('exo-list');
+        if (exoListEl) {
+            exoListEl.innerHTML = listToUse.map((ex, i) => {
+                const exoID = `${state.mode}-${i}`;
+                const isChecked = dayData.list.includes(exoID);
+                const defaultReps = ex.hasReps === false ? "" : 10;
+                const savedReps = dayData.details[exoID]?.reps !== undefined ? dayData.details[exoID].reps : defaultReps;
 
-            return `<div class="exo-item ${isChecked ? 'checked' : ''}" onclick="toggleExo('${exoID}', event)">
-                <div class="exo-left">
-                    <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="this.parentElement.parentElement.click()">
-                    ${ex.hasReps !== false ? `
-                        <div onclick="event.stopPropagation();">
-                            <input type="number" 
-                                class="exo-input-sub" 
-                                id="rep-${exoID}" 
-                                placeholder="Reps" 
-                                value="${savedReps}" 
-                                oninput="updateExoData('${exoID}')" 
-                                title="Répétitions libres">
+                return `<div class="exo-item ${isChecked ? 'checked' : ''}" onclick="toggleExo('${exoID}', event)">
+                    <div class="exo-left">
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="this.parentElement.parentElement.click()">
+                        ${ex.hasReps !== false ? `
+                            <div onclick="event.stopPropagation();">
+                                <input type="number" 
+                                    class="exo-input-sub" 
+                                    id="rep-${exoID}" 
+                                    placeholder="Reps" 
+                                    value="${savedReps}" 
+                                    oninput="updateExoData('${exoID}')" 
+                                    title="Répétitions libres">
+                            </div>
+                        ` : ''}
+                        <div class="exo-text" style="${rankIndex >= 4 ? 'color: var(--rank-color); font-weight: bold;' : ''}">
+                            ${ex.name}
                         </div>
-                    ` : ''}
-                    <div class="exo-text" style="${rankIndex >= 4 ? 'color: var(--rank-color); font-weight: bold;' : ''}">
-                        ${ex.name}
                     </div>
-                </div>
-                <div class="exo-right-inputs" onclick="event.stopPropagation();">
-                    ${ex.hasKg ? `
-                        <input type="number" class="exo-input-sub" id="kg-${exoID}-1" placeholder="1st kg" value="${dayData.details[exoID]?.kg1 || ''}" oninput="updateExoData('${exoID}')">
-                        <input type="number" class="exo-input-sub" id="kg-${exoID}-2" placeholder="2nd kg" value="${dayData.details[exoID]?.kg2 || ''}" oninput="updateExoData('${exoID}')">
-                        <input type="number" class="exo-input-sub" id="kg-${exoID}-3" placeholder="3rd kg" value="${dayData.details[exoID]?.kg3 || ''}" oninput="updateExoData('${exoID}')">
-                    ` : ''}
-                </div>
-            </div>`;
-        }).join('');
+                    <div class="exo-right-inputs" onclick="event.stopPropagation();">
+                        ${ex.hasKg ? `
+                            <input type="number" class="exo-input-sub" id="kg-${exoID}-1" placeholder="1st kg" value="${dayData.details[exoID]?.kg1 || ''}" oninput="updateExoData('${exoID}')">
+                            <input type="number" class="exo-input-sub" id="kg-${exoID}-2" placeholder="2nd kg" value="${dayData.details[exoID]?.kg2 || ''}" oninput="updateExoData('${exoID}')">
+                            <input type="number" class="exo-input-sub" id="kg-${exoID}-3" placeholder="3rd kg" value="${dayData.details[exoID]?.kg3 || ''}" oninput="updateExoData('${exoID}')">
+                        ` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
 
-        document.getElementById('exo-count').innerText = `${currentModeDone.length}/${listToUse.length}`;
+        safeSetText('exo-count', `${currentModeDone.length}/${listToUse.length}`);
     }
 
     function toggleExo(exoID, event) {
@@ -423,7 +485,10 @@ const levelUpSound = new Audio('./songs/win.wav');
         cal.innerHTML = "";
         const now = new Date();
         const year = currentViewDate.getFullYear(), month = currentViewDate.getMonth();
-        document.getElementById('month-label').innerText = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentViewDate);
+        
+        const monthLabel = document.getElementById('month-label');
+        if (monthLabel) monthLabel.innerText = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentViewDate);
+        
         const days = new Date(year, month + 1, 0).getDate();
 
         for(let i=1; i<=days; i++) {
@@ -470,7 +535,7 @@ const levelUpSound = new Audio('./songs/win.wav');
         const m = Math.floor((diff / 60000) % 60).toString().padStart(2, '0');
         const s = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
         
-        document.getElementById('timer').innerText = `${d}j ${h}h ${m}m ${s}s`;
+        safeSetText('timer', `${d}j ${h}h ${m}m ${s}s`);
         
         const treeIcon = document.getElementById('tree-icon');
         if (treeIcon) {
@@ -494,7 +559,8 @@ const levelUpSound = new Audio('./songs/win.wav');
 
     function exportData() {
         const dataStr = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
-        document.getElementById('backup-io').value = dataStr;
+        const backupIo = document.getElementById('backup-io');
+        if (backupIo) backupIo.value = dataStr;
         alert("Code système généré avec succès dans la zone de texte ! Copiez-le.");
     }
 
@@ -509,7 +575,9 @@ const levelUpSound = new Audio('./songs/win.wav');
     }
 
     function importData() {
-        const code = document.getElementById('backup-io').value.trim();
+        const backupIo = document.getElementById('backup-io');
+        if(!backupIo) return;
+        const code = backupIo.value.trim();
         if(!code) return alert("Veuillez coller un code valide d'abord.");
         try {
             const parsed = JSON.parse(decodeURIComponent(escape(atob(code))));
@@ -548,27 +616,18 @@ const levelUpSound = new Audio('./songs/win.wav');
         reader.readAsText(file);
     }
 
-    // --- INITIALISATION UNIQUE DU SYSTÈME ---
+    // --- INITIALISATION UNIQUE ---
     if (!state.mode) {
         state.mode = 'haut';
     }
 
     save();
 
-    // Lancement propre et séquentiel de l'interface
     setMode(state.mode);
     checkPointDecay();
     updateUI(); 
     renderCalendar();
     updateTimer();
 
-    // Intervalles uniques
     setInterval(updateTimer, 1000); 
     setInterval(checkPointDecay, 60000);
-
-    // Gestions des audios
-    document.addEventListener('click', () => {
-        levelUpSound.load();
-        levelDownSound.load();
-        levelResetSound.load();
-    }, { once: true });
