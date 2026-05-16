@@ -652,3 +652,8 @@
 
     setInterval(updateTimer, 1000); 
     setInterval(checkPointDecay, 60000);
+
+    setTimeout(() => {
+    console.log("Exécution du test forcé de la modale");
+    showLevelUpUI(1); 
+}, 2000);
