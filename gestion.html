@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#05070a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Eveil">
+
+    <title>S-SYSTEM</title>
+    <link rel="stylesheet" href="gestion.css">
+</head>
+<body>
+
+    <div class="system-glow"></div>
+
+<!-- BURGER MENU -->
+<div class="burger-menu" onclick="toggleAbout()">
+    <div style="width: 20px; height: 2px; background: var(--text); margin: 4px 0;"></div>
+    <div style="width: 20px; height: 2px; background: var(--text); margin: 4px 0;"></div>
+    <div style="width: 20px; height: 2px; background: var(--text); margin: 4px 0;"></div>
+</div>
+
+<!-- EFFET D'ARRIÈRE PLAN FLOU CLIQUEUR -->
+<div class="overlay" id="overlay" onclick="toggleAbout()"></div>
+
+<!-- PANNEAU COULISSANT DROIT -->
+<div class="about-panel" id="about-panel">
+    <div class="about-header">
+        <div class="system-title">Navigation Application</div>
+        <h2 style="margin: 5px 0;">ÉVEIL BUDGET v1.2</h2>
+    </div>
+    
+    <div class="about-content">
+        <!-- Lien vers S-System -->
+        <a href="../index.html" style="color: #fff;" class="menu-link">
+            1. S-SYSTEM (Principal)
+        </a>
+        <!-- Lien actif (Page Éveil actuelle) -->
+        <a href="gestion.html" style="color: var(--rank-color); font-weight: bold; border-left: 3px solid var(--rank-color); padding-left: 10px;" class="menu-link">
+            2. ÉVEIL BUDGET ✔
+        </a>
+        <!-- Lien vers À Propos -->
+        <a href="../a_propos/a_propos.html" style="color: #fff;" class="menu-link">
+            3. À PROPOS / INFOS
+        </a>
+    </div>
+    
+    <!-- Bouton de fermeture dynamique lié à la classe css corrigée -->
+    <button class="btn-system" onclick="toggleAbout()">Fermer</button>
+</div>
+
+    <div class="container">
+        <div class="sidebar">
+            <!-- RANGS ET SOLDE COURANT -->
+            <div class="card">
+                <div class="rank-box">
+                    <div class="system-title">Mana Disponible (Compte Courant)</div>
+                    <div id="global-score-container" style="font-size: 0.85rem; letter-spacing: 2px; margin-bottom: 5px; opacity: 0.8;">
+                        SCORE GLOBAL : <span id="global-score" class="system-title" style="font-weight: bold;">0.00€</span>
+                    </div>
+                    <span id="rank-medal">E</span>
+                    <div id="rank-name" style="font-weight: 900; color: var(--rank-color);">NOMADE DU BUDGET</div>
+                    
+                    <div class="balance-display"><span id="total-balance">0.00</span>€</div>
+                    
+                    <div class="progress-container"><div id="progress-bar"></div></div>
+                    <div id="daily-allowance" style="font-size: 0.8rem; color: var(--system-gold); font-weight: 700;">
+                        MANA JOURNALIER : 0.00€
+                    </div>
+                    <p style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px;">Reste à vivre (hors charges et épargne)</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <label>Revenus reçus</label>
+                        <span id="stat-inc" class="stat-val positive">0€</span>
+                    </div>
+                    <div class="stat-card">
+                        <label>Dépenses courantes</label>
+                        <span id="stat-exp" class="stat-val negative">0€</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CASE : COFFRE-FORT D'ÉPARGNE GLOBAL (INLINE EDIT) -->
+            <div class="card vault-card">
+                <div class="vault-title">🛡️ COFFRE-FORT GLOBAL (Livret A / PEA)</div>
+                <div class="vault-display-container" id="vault-wrapper">
+                    <!-- Généré dynamiquement en JS (Texte ou Input) -->
+                </div>
+                <p style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px; margin-bottom: 0;">Solde total capitalisé (Clique pour modifier)</p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- AJOUTER TRANSACTION -->
+            <div class="card">
+                <div class="system-title" id="flux-title">Nouvelle Mission de Flux</div>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div class="input-group" style="margin: 0;">
+                        <label>Libellé (ex: Salaire)</label>
+                        <input type="text" id="desc" placeholder="Objet de la quête...">
+                    </div>
+                    <div class="input-group" style="margin: 0;">
+                        <label>Montant (€)</label>
+                        <input type="number" id="amount" placeholder="0.00">
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Type de Flux (Catégorie)</label>
+                    <select id="category">
+                        <option value="vie">🏠 Vie Quotidienne (Courses, Logement...)</option>
+                        <option value="food">🍖 Potions & Rations (Restos, Uber...)</option>
+                        <option value="stuff">⚔️ Équipement & Loisirs (Sorties, Jeux...)</option>
+                        <option value="epargne">💎 Cristaux & Épargne (Envoi vers Livret A/PEA...)</option>
+                        <option value="imprevu">⚠️ Anomalie / Imprévu (Urgence, Réparation...)</option>
+                        <option value="mana">🌀 Source de Mana (Revenu / Salaire)</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 10px;" id="flux-buttons-container">
+                    <button id="btn-flux-income" class="btn btn-primary" onclick="processFlux('income')">+ REVENU</button>
+                    <button id="btn-flux-expense" class="btn" style="background: var(--system-red); color: white;" onclick="processFlux('expense')">- DÉPENSE / ENVOI COFFRE</button>
+                </div>
+                <button id="btn-flux-cancel" class="btn btn-ghost" style="display: none; margin-top: 10px;" onclick="cancelFluxEdit()">Annuler la modification</button>
+            </div>
+
+            <!-- DEPENSES RÉCURRENTES -->
+            <div class="card">
+                <div class="system-title">Charges Récurrentes & Épargne Fixe (Mensuel)</div>
+                <div id="recurring-list"></div>
+                <div style="margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px;">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <input type="text" id="recur-desc" placeholder="Ex: Netflix, Loyer, Épargne auto..." maxlength="12">
+                        <input type="number" id="recur-amount" placeholder="€">
+                    </div>
+                    <div class="input-group">
+                        <label>Catégorie Fixe</label>
+                        <select id="recur-category">
+                            <option value="vie">🏠 Vie Quotidienne</option>
+                            <option value="food">🍖 Potions & Rations</option>
+                            <option value="stuff">⚔️ Équipement & Loisirs</option>
+                            <option value="epargne">💎 Cristaux & Épargne</option>
+                        </select>
+                    </div>
+                    <button id="btn-recur-action" class="btn btn-ghost" onclick="addRecurring()" style="color: var(--system-blue); border-color: var(--system-blue);">+ AJOUTER FIXE</button>
+                </div>
+            </div>
+
+            <!-- LISTE DES FLUX -->
+            <div class="card">
+                <div class="system-title">Historique des Flux de Mana</div>
+                <div id="transaction-list"></div>
+                <button class="btn btn-ghost" style="margin-top: 20px;" onclick="resetSystem()">RÉINITIALISER TOUT</button>
+            </div>
+        </div>
+    </div>
+
+ <script src="gestion.js"></script>
+</body>
+</html>
