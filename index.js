@@ -169,7 +169,7 @@
         const card = document.querySelector('.level-up-card');
         if (card) {
             card.style.borderColor = rank.color;
-            card.style.boxShadow = `0 0 50px ${hexToRgba(rank.color, 0.2)}`;
+            card.style.boxShadow = `0 0 50px ${hexToRgba(rank.color, 0.4)}`;
         }
         
         const closeBtn = document.getElementById('lu-close-btn');
@@ -188,16 +188,17 @@
         });
         safeSetText('stat-total-exos', totalExos);
 
-        const modal = document.getElementById('level-up-modal');
-        if (modal) modal.style.display = 'flex';
-    }
-
-    function formatDuration(ms) {
-        const d = Math.floor(ms / 86400000);
-        const h = Math.floor((ms / 3600000) % 24).toString().padStart(2, '0');
-        const m = Math.floor((ms / 60000) % 60).toString().padStart(2, '0');
-        const s = Math.floor((ms / 1000) % 60).toString().padStart(2, '0');
-        return `${d}j ${h}h ${m}m ${s}s`;
+        // FORCE RENDER MOBILE : On force le navigateur à planifier l'affichage hors du flux synchrone
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                const modal = document.getElementById('level-up-modal');
+                if (modal) {
+                    modal.style.setProperty('display', 'flex', 'important');
+                    modal.style.opacity = '1';
+                    modal.style.visibility = 'visible';
+                }
+            }, 50);
+        });
     }
 
     function showPenaltyUI() {
@@ -237,11 +238,19 @@
         const card = document.querySelector('.level-up-card');
         if (card) {
             card.style.borderColor = "#ff0033";
-            card.style.boxShadow = `0 0 50px rgba(255, 0, 51, 0.2)`;
+            card.style.boxShadow = `0 0 50px rgba(255, 0, 51, 0.4)`;
         }
         
-        const modal = document.getElementById('level-up-modal');
-        if (modal) modal.style.display = 'flex';
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                const modal = document.getElementById('level-up-modal');
+                if (modal) {
+                    modal.style.setProperty('display', 'flex', 'important');
+                    modal.style.opacity = '1';
+                    modal.style.visibility = 'visible';
+                }
+            }, 50);
+        });
     }
 
     function showRankDownUI(rankIdx) {
@@ -284,16 +293,28 @@
         const card = document.querySelector('.level-up-card');
         if (card) {
             card.style.borderColor = "#ff0033";
-            card.style.boxShadow = `0 0 50px rgba(255, 0, 51, 0.2)`;
+            card.style.boxShadow = `0 0 50px rgba(255, 0, 51, 0.4)`;
         }
         
-        const modal = document.getElementById('level-up-modal');
-        if (modal) modal.style.display = 'flex';
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                const modal = document.getElementById('level-up-modal');
+                if (modal) {
+                    modal.style.setProperty('display', 'flex', 'important');
+                    modal.style.opacity = '1';
+                    modal.style.visibility = 'visible';
+                }
+            }, 50);
+        });
     }
 
     function closeLevelUp() {
         const modal = document.getElementById('level-up-modal');
-        if (modal) modal.style.display = 'none';
+        if (modal) {
+            modal.style.setProperty('display', 'none', 'important');
+            modal.style.opacity = '0';
+            modal.style.visibility = 'hidden';
+        }
 
         try {
             if (pendingRankColor) {
