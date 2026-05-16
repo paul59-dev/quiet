@@ -121,17 +121,27 @@ const levelUpSound = new Audio('./songs/win.wav');
         document.getElementById('lu-stat-label-1').innerText = "ABSTINENCE";
         document.getElementById('lu-stat-label-2').innerText = "RANG PRÉCÉDENT";
         document.getElementById('lu-stat-label-3').innerText = "EXERCICES COMPLÉTÉS";
-        document.getElementById('lu-close-btn').innerText = "CONTINUER";
 
         const targetIdx = (rankIdx !== undefined) ? rankIdx : state.currentRankIndex;
         const rank = RANKS[targetIdx];
         if (!rank) return;
 
+        // Sauvegarde de la couleur pour la fermeture
+        pendingRankColor = rank.color;
+
         document.getElementById('lu-rank-icon').innerText = rank.icon;
         document.getElementById('lu-rank-name').innerText = rank.name;
-        document.documentElement.style.setProperty('--system-blue', rank.color);
+        
+        // Application locale sur la carte uniquement
+        document.getElementById('lu-rank-name').style.color = rank.color;
         document.querySelector('.level-up-card').style.borderColor = rank.color;
         document.querySelector('.level-up-card').style.boxShadow = `0 0 50px ${hexToRgba(rank.color, 0.2)}`;
+        
+        const closeBtn = document.getElementById('lu-close-btn');
+        if (closeBtn) {
+            closeBtn.innerText = "CONTINUER";
+            closeBtn.style.background = rank.color;
+        }
 
         function formatDuration(ms) {
             const d = Math.floor(ms / 86400000);
@@ -161,7 +171,11 @@ const levelUpSound = new Audio('./songs/win.wav');
         document.getElementById('lu-main-label').style.color = "#ff0033";
         document.getElementById('lu-rank-icon').innerText = "!";
         document.getElementById('lu-rank-name').innerText = "DÉGRADATION";
+        document.getElementById('lu-rank-name').style.color = "#ff0033";
         
+        // Sauvegarde de la couleur rouge d'alerte pour l'application
+        pendingRankColor = "#ff0033";
+
         document.getElementById('lu-stat-label-1').innerText = "PENALITÉ";
         document.getElementById('stat-abstinence').innerText = "-200 LP";
         document.getElementById('stat-abstinence').style.color = "#ff0033";
@@ -172,9 +186,14 @@ const levelUpSound = new Audio('./songs/win.wav');
         document.getElementById('lu-stat-label-3').innerText = "STATUT";
         document.getElementById('stat-total-exos').innerText = "APPLIQUÉ";
 
-        document.documentElement.style.setProperty('--system-blue', '#ff0033');
-        document.getElementById('lu-close-btn').innerText = "ACCEPTER";
-        document.getElementById('lu-close-btn').style.background = "#ff0033";
+        const closeBtn = document.getElementById('lu-close-btn');
+        if (closeBtn) {
+            closeBtn.innerText = "ACCEPTER";
+            closeBtn.style.background = "#ff0033";
+        }
+        
+        document.querySelector('.level-up-card').style.borderColor = "#ff0033";
+        document.querySelector('.level-up-card').style.boxShadow = `0 0 50px rgba(255, 0, 51, 0.2)`;
         
         document.getElementById('level-up-modal').style.display = 'flex';
     }
@@ -186,8 +205,14 @@ const levelUpSound = new Audio('./songs/win.wav');
         document.getElementById('lu-main-label').style.color = "#ff0033";
         
         const rank = RANKS[rankIdx];
+        if (!rank) return;
+
+        // Sauvegarde de la couleur du nouveau rang inférieur
+        pendingRankColor = rank.color;
+
         document.getElementById('lu-rank-icon').innerText = rank.icon;
         document.getElementById('lu-rank-name').innerText = rank.name;
+        document.getElementById('lu-rank-name').style.color = "#ff0033";
         
         document.getElementById('lu-stat-label-1').innerText = "STATUT";
         document.getElementById('stat-abstinence').innerText = "RANG INFÉRIEUR";
@@ -199,9 +224,11 @@ const levelUpSound = new Audio('./songs/win.wav');
         document.getElementById('lu-stat-label-3').innerText = "MESSAGE";
         document.getElementById('stat-total-exos').innerText = "LA FORCE DIMINUE...";
 
-        document.documentElement.style.setProperty('--system-blue', '#ff0033');
-        document.getElementById('lu-close-btn').innerText = "REPRENDRE L'ENTRAINEMENT";
-        document.getElementById('lu-close-btn').style.background = "#ff0033";
+        const closeBtn = document.getElementById('lu-close-btn');
+        if (closeBtn) {
+            closeBtn.innerText = "REPRENDRE L'ENTRAINEMENT";
+            closeBtn.style.background = "#ff0033";
+        }
         
         document.querySelector('.level-up-card').style.borderColor = "#ff0033";
         document.querySelector('.level-up-card').style.boxShadow = `0 0 50px rgba(255, 0, 51, 0.2)`;
@@ -210,9 +237,33 @@ const levelUpSound = new Audio('./songs/win.wav');
     }
 
     function closeLevelUp() {
-        document.getElementById('level-up-modal').style.display = 'none';
-        document.getElementById('lu-close-btn').style.background = "var(--system-blue)";
-        document.getElementById('stat-abstinence').style.color = "var(--system-blue)";
+        // 1. On ferme la modale en priorité absolue
+        const modal = document.getElementById('level-up-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+
+        // 2. On applique la couleur globale sauvegardée de manière sécurisée
+        try {
+            if (pendingRankColor) {
+                document.documentElement.style.setProperty('--system-blue', pendingRankColor);
+            }
+        } catch (error) {
+            console.error("Erreur lors de l'application de la couleur globale :", error);
+        }
+        
+        // 3. On remet à zéro les styles temporaires des textes internes
+        try {
+            const statAbstinence = document.getElementById('stat-abstinence');
+            if (statAbstinence) {
+                statAbstinence.style.color = "white"; 
+            }
+        } catch (error) {
+            console.error("Erreur lors du reset des styles :", error);
+        }
+
+        // 4. On vide la variable temporaire
+        pendingRankColor = null;
     }
 
     function checkPointDecay() {
