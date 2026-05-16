@@ -1,6 +1,6 @@
-const levelUpSound = new Audio('win.wav');
-    const levelDownSound = new Audio('down.wav');
-    const levelResetSound = new Audio('reset.wav');
+const levelUpSound = new Audio('./songs/win.wav');
+    const levelDownSound = new Audio('./songs/down.wav');
+    const levelResetSound = new Audio('./songs/reset.wav');
 
     function toggleAbout() {
             const panel = document.getElementById('about-panel');
