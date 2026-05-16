@@ -141,8 +141,8 @@
         if (el) el.innerText = text;
     }
 
-    function showLevelUpUI(rankIdx) {
-        try { levelUpSound.play().catch(e => console.log("Audio bloqué ou indisponible")); } catch(e) {}
+   function showLevelUpUI(rankIdx) {
+        try { levelUpSound.play().catch(e => console.log("Audio bloqué")); } catch(e) {}
         
         safeSetText('lu-header-title', "AVANCEMENT DU SYSTÈME");
         safeSetText('lu-main-label', "LEVEL UP");
@@ -188,17 +188,26 @@
         });
         safeSetText('stat-total-exos', totalExos);
 
-        // FORCE RENDER MOBILE : On force le navigateur à planifier l'affichage hors du flux synchrone
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                const modal = document.getElementById('level-up-modal');
-                if (modal) {
-                    modal.style.setProperty('display', 'flex', 'important');
-                    modal.style.opacity = '1';
-                    modal.style.visibility = 'visible';
-                }
-            }, 50);
-        });
+        // --- CORRECTIF DE FORCE BRUTE POUR CHROME MOBILE ---
+        const modal = document.getElementById('level-up-modal');
+        if (modal) {
+            // On récupère la hauteur réelle de la zone d'affichage du téléphone
+            const mobileHeight = window.innerHeight; 
+            
+            // On applique des styles en pixels absolus pour écraser les bugs CSS
+            modal.style.position = 'fixed';
+            modal.style.top = '0px';
+            modal.style.left = '0px';
+            modal.style.width = '100%';
+            modal.style.height = mobileHeight + 'px'; // Fixe la hauteur exacte en px
+            modal.style.minHeight = mobileHeight + 'px';
+            
+            // Forçage de l'affichage
+            modal.style.setProperty('display', 'flex', 'important');
+            modal.style.visibility = 'visible';
+            modal.style.opacity = '1';
+            modal.style.zIndex = '9999999';
+        }
     }
 
     function showPenaltyUI() {
