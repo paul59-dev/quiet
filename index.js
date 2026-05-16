@@ -114,7 +114,7 @@ const levelUpSound = new Audio('./songs/win.wav');
     }
 
     function showLevelUpUI(rankIdx) {
-        levelUpSound.play();
+        try { levelUpSound.play().catch(e => console.log("Audio bloqué par le mobile")); } catch(e) {}
         document.getElementById('lu-header-title').innerText = "AVANCEMENT DU SYSTÈME";
         document.getElementById('lu-main-label').innerText = "LEVEL UP";
         document.getElementById('lu-main-label').style.color = "white";
@@ -155,7 +155,7 @@ const levelUpSound = new Audio('./songs/win.wav');
     }
 
     function showPenaltyUI() {
-        levelResetSound.play();
+        try { levelResetSound.play().catch(e => console.log("Audio bloqué par le mobile")); } catch(e) {}
         document.getElementById('lu-header-title').innerText = "ALERTE DU SYSTÈME";
         document.getElementById('lu-main-label').innerText = "QUÊTE DE PÉNALITÉ";
         document.getElementById('lu-main-label').style.color = "#ff0033";
@@ -180,7 +180,7 @@ const levelUpSound = new Audio('./songs/win.wav');
     }
 
     function showRankDownUI(rankIdx) {
-        levelDownSound.play();
+        try { levelDownSound.play().catch(e => console.log("Audio bloqué par le mobile")); } catch(e) {}
         document.getElementById('lu-header-title').innerText = "AVERTISSEMENT DU SYSTÈME";
         document.getElementById('lu-main-label').innerText = "RÉTROGRADATION";
         document.getElementById('lu-main-label').style.color = "#ff0033";
