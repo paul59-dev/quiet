@@ -143,7 +143,6 @@ function toggleAbout() {
             }
         }
 
-        // Fonction pivot pour gérer l'ajout ou la modification d'un flux quotidien
         function processFlux(type) {
             const desc = document.getElementById('desc').value;
             const amt = parseFloat(document.getElementById('amount').value);
@@ -151,19 +150,16 @@ function toggleAbout() {
             if (!desc || isNaN(amt)) return;
 
             if (editingTransactionId !== null) {
-                // Mode Modification
                 const item = state.transactions.find(t => t.id === editingTransactionId);
                 if (item) {
                     item.desc = desc;
                     item.amount = type === 'expense' ? -amt : amt;
                     item.category = cat;
                 }
-                // Reset du mode modification
                 editingTransactionId = null;
                 document.getElementById('flux-title').innerText = "Nouvelle Mission de Flux";
                 document.getElementById('btn-flux-cancel').style.display = "none";
             } else {
-                // Mode Création standard
                 state.transactions.push({
                     id: Date.now(),
                     desc: desc,
@@ -179,7 +175,6 @@ function toggleAbout() {
             save();
         }
 
-        // Active le mode d'édition pour un flux de l'historique
         function editTransaction(id) {
             const item = state.transactions.find(t => t.id === id);
             if (!item) return;
@@ -190,18 +185,15 @@ function toggleAbout() {
 
             editingTransactionId = id;
             
-            // Changement de l'interface graphique pour le mode édition (calqué sur le style dynamique)
             const title = document.getElementById('flux-title');
             title.innerText = "💾 Modifier la Mission de Flux";
             title.style.color = "var(--rank-color)";
             
             document.getElementById('btn-flux-cancel').style.display = "block";
             
-            // Scroll léger vers le formulaire pour l'ergonomie mobile
             document.getElementById('flux-title').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Sortir du mode d'édition du flux quotidien sans sauvegarder
         function cancelFluxEdit() {
             editingTransactionId = null;
             document.getElementById('desc').value = '';
@@ -375,24 +367,46 @@ function toggleAbout() {
 
             document.getElementById('global-score').innerText = fortuneTotale.toFixed(2) + '€';
 
-            let ratio = fortuneTotale;
-            if (fortuneTotale < 0) ratio = -1;
-
-            let currentRank = RANKS[5];
+            // Recherche du rang actuel
+            let currentRank = RANKS[5]; // Vagabond (E) par défaut
             for (let r of RANKS) {
-                if (ratio >= r.min) {
+                if (fortuneTotale >= r.min) {
                     currentRank = r;
                     break;
                 }
             }
 
-            // INJECTION DES STYLES DYNAMIQUES ICI
+            // ========================================================
+            // CALCUL TECHNIQUE ET DYNAMIQUE DU POURCENTAGE DE LA BARRE
+            // ========================================================
+            let nextRank = RANKS[0]; // Par défaut le rang max S
+            const currentRankIndex = RANKS.indexOf(currentRank);
+            
+            if (currentRankIndex > 0) {
+                // Le rang supérieur direct dans le tableau (ex: de E à D)
+                nextRank = RANKS[currentRankIndex - 1];
+            } else {
+                nextRank = currentRank; // Bloqué au rang S si atteint
+            }
+
+            let progressPercent = 100;
+            if (nextRank !== currentRank) {
+                const range = nextRank.min - currentRank.min;
+                const progressInsideRank = fortuneTotale - currentRank.min;
+                progressPercent = (progressInsideRank / range) * 100;
+            }
+
+            // Sécurité électronique pour contraindre la jauge entre 0 et 100%
+            progressPercent = Math.min(Math.max(progressPercent, 0), 100);
+
+            // INJECTION DES STYLES DYNAMIQUES
             document.documentElement.style.setProperty('--rank-color', currentRank.color);
             document.getElementById('rank-medal').innerText = currentRank.icon;
             document.getElementById('rank-name').innerText = currentRank.name;
-            document.getElementById('progress-bar').style.width = Math.min(Math.max(ratio, 0), 100) + '%';
             
-            // Met à jour dynamiquement tous les conteneurs avec la classe .system-title
+            // Application immédiate de la progression calculée
+            document.getElementById('progress-bar').style.width = progressPercent + '%';
+            
             const systemTitles = document.querySelectorAll('.system-title');
             systemTitles.forEach(title => {
                 title.style.color = 'var(--rank-color)';
