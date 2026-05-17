@@ -703,6 +703,16 @@
 
         // Application au state global
         state.points = pointsCalculatiens;
+
+        // --- ENREGISTREMENT SÛR DE LA COULEUR DANS L'HISTORIQUE ---
+        // On reproduit exactement la même logique robuste que ton checkLevelUp
+        let calculatedRankIdx = 0;
+        RANKS.forEach((r, i) => { if (pointsCalculatiens >= r.min) calculatedRankIdx = i; });
+        
+        const updatedColor = RANKS[calculatedRankIdx]?.color || "#94a3b8";
+        dayData.color = updatedColor;
+
+        // On sauvegarde une seule fois ici, maintenant que les points ET la couleur du jour sont prêts
         save();
 
         // Mise à jour immédiate des composants visuels de base
@@ -740,42 +750,52 @@
     }
 
     function renderCalendar() {
-        const cal = document.getElementById('calendar'); 
-        if(!cal) return;
-        cal.innerHTML = "";
-        const now = new Date();
-        const year = currentViewDate.getFullYear(), month = currentViewDate.getMonth();
+    const cal = document.getElementById('calendar'); 
+    if(!cal) return;
+    cal.innerHTML = "";
+    const now = new Date();
+    const year = currentViewDate.getFullYear(), month = currentViewDate.getMonth();
+    
+    const monthLabel = document.getElementById('month-label');
+    if (monthLabel) monthLabel.innerText = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentViewDate);
+    
+    const days = new Date(year, month + 1, 0).getDate();
+
+    for(let i=1; i<=days; i++) {
+        const isToday = (i === now.getDate() && month === now.getMonth() && year === now.getFullYear());
+        const isFixedPenaltyDay = (i === 1 && (month + 1) % 2 === 0);
+        const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        const dayData = state.sportHistory[dStr];
         
-        const monthLabel = document.getElementById('month-label');
-        if (monthLabel) monthLabel.innerText = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(currentViewDate);
-        
-        const days = new Date(year, month + 1, 0).getDate();
+        let count = 0, rankColor = '#94a3b8'; // Gris par défaut (Rang E)
 
-        for(let i=1; i<=days; i++) {
-            const isToday = (i === now.getDate() && month === now.getMonth() && year === now.getFullYear());
-            const isFixedPenaltyDay = (i === 1 && (month + 1) % 2 === 0);
-            const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-            const dayData = state.sportHistory[dStr];
-            let count = 0, rankColor = 'transparent';
-            if (dayData) {
-                const list = Array.isArray(dayData) ? dayData : (dayData.list || []);
-                count = list.length;
-                rankColor = dayData.color || "#94a3b8";
-            }
-
-            let opacity = 0;
-            if (count >= 9) opacity = 1.0; 
-            else if (count >= 5) opacity = 0.6; 
-            else if (count >= 2) opacity = 0.3; 
-            else if (count === 1) opacity = 0.15; 
-
-            let bgStyle = "";
-            if (isFixedPenaltyDay) bgStyle = `border: 2px solid var(--system-warning); color: #ff4d4d; font-weight: 900;`;
-            else if (opacity > 0) bgStyle = `background-color: ${hexToRgba(rankColor, opacity)}; color: ${opacity > 0.6 ? '#000' : 'var(--text)'};`;
-            
-            cal.innerHTML += `<div class="day ${isToday ? 'today' : ''}" style="${bgStyle}">${i}</div>`;
+        if (dayData) {
+            const list = Array.isArray(dayData) ? dayData : (dayData.list || []);
+            count = list.length;
+            rankColor = dayData.color || "#94a3b8";
         }
+
+        // CORRECTIF DYNAMIQUE : Si c'est aujourd'hui, on force la couleur du rang actuel en temps réel
+        if (isToday) {
+            rankColor = typeof getCurrentRankColor === 'function' ? getCurrentRankColor() : (RANKS[state.currentRankIndex]?.color || "#94a3b8");
+        }
+
+        let opacity = 0;
+        if (count >= 9) opacity = 1.0; 
+        else if (count >= 5) opacity = 0.6; 
+        else if (count >= 2) opacity = 0.3; 
+        else if (count === 1) opacity = 0.15; 
+
+        let bgStyle = "";
+        if (isFixedPenaltyDay) {
+            bgStyle = `border: 2px solid var(--system-warning); color: #ff4d4d; font-weight: 900;`;
+        } else if (opacity > 0) {
+            bgStyle = `background-color: ${hexToRgba(rankColor, opacity)}; color: ${opacity > 0.6 ? '#000' : 'var(--text)'};`;
+        }
+        
+        cal.innerHTML += `<div class="day ${isToday ? 'today' : ''}" style="${bgStyle}">${i}</div>`;
     }
+}
 
     function hexToRgba(hex, alpha) {
         if (!hex || hex === 'transparent') return 'rgba(255,255,255,0.03)';
