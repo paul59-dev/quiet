@@ -122,16 +122,26 @@
         let newRankIndex = 0;
         RANKS.forEach((r, i) => { if (newPoints >= r.min) newRankIndex = i; });
 
+        // Si passage au rang supérieur
         if (newRankIndex > state.currentRankIndex) {
+            state.currentRankIndex = newRankIndex; // On change le rang d'abord
+            state.lastRankChangeDate = Date.now();
+            save();
+            
+            // On ré-applique les couleurs du nouveau rang immédiatement
+            updateUI();
+            
+            // On lance la modale
             showLevelUpUI(newRankIndex);
-            state.currentRankIndex = newRankIndex;
-            state.lastRankChangeDate = Date.now();
-            save();
+
+        // Si rétrogradation
         } else if (newRankIndex < state.currentRankIndex) {
-            showRankDownUI(newRankIndex);
             state.currentRankIndex = newRankIndex;
             state.lastRankChangeDate = Date.now();
             save();
+            
+            updateUI();
+            showRankDownUI(newRankIndex);
         }
     }
 
@@ -646,6 +656,7 @@
             pointsGagnes = repInput ? (parseInt(repInput.value) || 0) : 10;
         }
 
+        // 1. Mise à jour des points dans le state
         if (index === -1) {
             dayData.list.push(exoID);
             state.points += pointsGagnes;
@@ -654,10 +665,19 @@
             state.points = Math.max(0, state.points - pointsGagnes);
         }
 
+        // 2. Sauvegarde immédiate
         save();
-        checkLevelUp(state.points);
-        renderExos();
+
+        // 3. FORCE LE RENDU VISUEL DE L'INTERFACE DIRECTEMENT
         updateUI();
+        renderExos();
+        if (typeof renderCalendar === 'function') renderCalendar();
+
+        // 4. DESYNCHRONISATION DU LEVEL UP POUR CHROME MOBILE
+        // On laisse 50ms au navigateur pour appliquer les couleurs avant de lancer la modale et le son
+        setTimeout(() => {
+            checkLevelUp(state.points);
+        }, 50);
     }
 
     function updateExoData(exoID) {
