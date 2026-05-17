@@ -119,28 +119,35 @@
     }
 
     function checkLevelUp(newPoints) {
+        // 1. On calcule le rang correspondant aux nouveaux points
         let newRankIndex = 0;
         RANKS.forEach((r, i) => { if (newPoints >= r.min) newRankIndex = i; });
 
-        // Si passage au rang supérieur
+        // 2. On compare avec le rang actuel stocké dans le state
         if (newRankIndex > state.currentRankIndex) {
-            state.currentRankIndex = newRankIndex; // On change le rang d'abord
+            // PASSAGE AU RANG SUPÉRIEUR
+            state.currentRankIndex = newRankIndex; // Mise à jour de l'index
             state.lastRankChangeDate = Date.now();
             save();
             
-            // On ré-applique les couleurs du nouveau rang immédiatement
             updateUI();
+            renderExos();
+            if (typeof renderCalendar === 'function') renderCalendar();
             
-            // On lance la modale
+            // Déclenchement de la modale de montée
             showLevelUpUI(newRankIndex);
 
-        // Si rétrogradation
         } else if (newRankIndex < state.currentRankIndex) {
-            state.currentRankIndex = newRankIndex;
+            // RÉTROGRADATION
+            state.currentRankIndex = newRankIndex; // Mise à jour de l'index
             state.lastRankChangeDate = Date.now();
             save();
             
             updateUI();
+            renderExos();
+            if (typeof renderCalendar === 'function') renderCalendar();
+            
+            // Déclenchement de la modale de descente
             showRankDownUI(newRankIndex);
         }
     }
@@ -352,6 +359,13 @@
 //         pendingRankColor = null;
 //     }
     function showLevelUpUI(rankIdx) {
+
+        // Calculs sécurisés des durées
+        const startTime = state.startDate ? Number(state.startDate) : Date.now();
+        const lastChangeTime = state.lastRankChangeDate ? Number(state.lastRankChangeDate) : startTime;
+
+        safeSetText('stat-abstinence', formatDuration(Date.now() - startTime));
+        safeSetText('stat-prev-rank', formatDuration(Date.now() - lastChangeTime));
         try { levelUpSound.play().catch(e => console.log("Audio bloqué")); } catch(e) {}
         
         safeSetText('lu-header-title', "AVANCEMENT DU SYSTÈME");
@@ -632,6 +646,26 @@
         safeSetText('exo-count', `${currentModeDone.length}/${listToUse.length}`);
     }
 
+    function formatDuration(ms) {
+        if (isNaN(ms) || ms < 0) return "0d 0h";
+        
+        const seconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        const rHours = hours % 24;
+        const rMinutes = minutes % 60;
+
+        if (days > 0) {
+            return `${days}j ${rHours}h`;
+        } else if (hours > 0) {
+            return `${rHours}h ${rMinutes}m`;
+        } else {
+            return `${rMinutes} min`;
+        }
+    }
+
     function toggleExo(exoID, event) {
         if (event && event.target.type === 'checkbox') return;
 
@@ -656,28 +690,30 @@
             pointsGagnes = repInput ? (parseInt(repInput.value) || 0) : 10;
         }
 
-        // 1. Mise à jour des points dans le state
+        // Calcul des points en local avant modification du state
+        let pointsCalculatiens = state.points;
+
         if (index === -1) {
             dayData.list.push(exoID);
-            state.points += pointsGagnes;
+            pointsCalculatiens += pointsGagnes;
         } else {
             dayData.list.splice(index, 1);
-            state.points = Math.max(0, state.points - pointsGagnes);
+            pointsCalculatiens = Math.max(0, pointsCalculatiens - pointsGagnes);
         }
 
-        // 2. Sauvegarde immédiate
+        // Application au state global
+        state.points = pointsCalculatiens;
         save();
 
-        // 3. FORCE LE RENDU VISUEL DE L'INTERFACE DIRECTEMENT
+        // Mise à jour immédiate des composants visuels de base
         updateUI();
         renderExos();
         if (typeof renderCalendar === 'function') renderCalendar();
 
-        // 4. DESYNCHRONISATION DU LEVEL UP POUR CHROME MOBILE
-        // On laisse 50ms au navigateur pour appliquer les couleurs avant de lancer la modale et le son
+        // Analyse du changement de niveau (avec un micro-délai sécurisé pour le rendu mobile)
         setTimeout(() => {
             checkLevelUp(state.points);
-        }, 50);
+        }, 30);
     }
 
     function updateExoData(exoID) {
