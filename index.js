@@ -341,57 +341,179 @@
 //         }
 //         pendingRankColor = null;
 //     }
-function showLevelUpUI(rankIdx) {
-        // Étape 1 : On vérifie si la fonction se lance
-        alert("DIAGNOSTIC : showLevelUpUI s'est lancée pour le rang index : " + rankIdx);
+    function showLevelUpUI(rankIdx) {
+        try { levelUpSound.play().catch(e => console.log("Audio bloqué")); } catch(e) {}
         
-        try {
-            const targetIdx = (rankIdx !== undefined) ? rankIdx : state.currentRankIndex;
-            const rank = RANKS[targetIdx];
-            
-            if (!rank) {
-                alert("ERREUR : Le rang demandé n'existe pas dans le tableau RANKS.");
-                return;
-            }
+        safeSetText('lu-header-title', "AVANCEMENT DU SYSTÈME");
+        safeSetText('lu-main-label', "LEVEL UP");
+        
+        const mainLabel = document.getElementById('lu-main-label');
+        if (mainLabel) mainLabel.style.color = "white";
 
-            // Étape 2 : On teste si l'injection HTML de base fonctionne
-            const modal = document.getElementById('level-up-modal');
-            if (!modal) {
-                alert("ERREUR CRITIQUE : L'élément HTML avec l'ID 'level-up-modal' n'existe pas dans ta page !");
-                return;
-            }
+        safeSetText('lu-stat-label-1', "ABSTINENCE");
+        safeSetText('lu-stat-label-2', "RANG PRÉCÉDENT");
+        safeSetText('lu-stat-label-3', "EXERCICES COMPLÉTÉS");
 
-            // Si on arrive ici, on tente d'écrire dedans
-            safeSetText('lu-rank-name', rank.name);
-            modal.style.setProperty('display', 'flex', 'important');
-            modal.style.position = 'fixed';
-            modal.style.zIndex = '9999999';
-            modal.style.top = '0px';
-            modal.style.left = '0px';
-            modal.style.width = '100%';
-            modal.style.height = '100%';
-            modal.style.background = 'black';
-            
-            alert("DIAGNOSTIC : Tentative d'affichage de la modale terminée.");
+        const targetIdx = (rankIdx !== undefined) ? rankIdx : state.currentRankIndex;
+        const rank = RANKS[targetIdx];
+        if (!rank) return;
 
-        } catch (error) {
-            alert("CRASH JAVASCRIPT DETECTÉ : " + error.message);
+        pendingRankColor = rank.color;
+
+        safeSetText('lu-rank-icon', rank.icon);
+        safeSetText('lu-rank-name', rank.name);
+        
+        const rankName = document.getElementById('lu-rank-name');
+        if (rankName) rankName.style.color = rank.color;
+
+        const card = document.querySelector('.level-up-card');
+        if (card) {
+            card.style.borderColor = rank.color;
+            card.style.boxShadow = `0 0 40px ${hexToRgba(rank.color, 0.4)}`;
+        }
+        
+        const closeBtn = document.getElementById('lu-close-btn');
+        if (closeBtn) {
+            closeBtn.innerText = "CONTINUER";
+            closeBtn.style.background = rank.color;
+        }
+
+        safeSetText('stat-abstinence', formatDuration(Date.now() - state.startDate));
+        safeSetText('stat-prev-rank', formatDuration(Date.now() - (state.lastRankChangeDate || state.startDate)));
+
+        let totalExos = 0;
+        Object.values(state.sportHistory).forEach(dayData => {
+            const list = Array.isArray(dayData) ? dayData : (dayData.list || []);
+            totalExos += list.length;
+        });
+        safeSetText('stat-total-exos', totalExos);
+
+        const modal = document.getElementById('level-up-modal');
+        if (modal) {
+            const mobileHeight = window.innerHeight; 
+            modal.style.height = mobileHeight + 'px';
+            modal.style.setProperty('display', 'block', 'important'); // 'block' car le centrage est géré par position absolute sur la carte
         }
     }
 
     function showPenaltyUI() {
-        alert("DIAGNOSTIC : Purge système détectée !");
-        showLevelUpUI(0);
+        try { levelResetSound.play().catch(e => console.log("Audio bloqué")); } catch(e) {}
+        safeSetText('lu-header-title', "ALERTE DU SYSTÈME");
+        safeSetText('lu-main-label', "QUÊTE DE PÉNALITÉ");
+        
+        const mainLbl = document.getElementById('lu-main-label');
+        if (mainLbl) mainLbl.style.color = "#ff0033";
+        
+        safeSetText('lu-rank-icon', "!");
+        safeSetText('lu-rank-name', "DÉGRADATION");
+        
+        const rName = document.getElementById('lu-rank-name');
+        if (rName) rName.style.color = "#ff0033";
+        
+        pendingRankColor = "#ff0033";
+
+        safeSetText('lu-stat-label-1', "PENALITÉ");
+        safeSetText('stat-abstinence', "-200 LP");
+        
+        const statAbs = document.getElementById('stat-abstinence');
+        if (statAbs) statAbs.style.color = "#ff0033";
+        
+        safeSetText('lu-stat-label-2', "MOTIF");
+        safeSetText('stat-prev-rank', "PURGE MENSUELLE");
+        
+        safeSetText('lu-stat-label-3', "STATUT");
+        safeSetText('stat-total-exos', "APPLIQUÉ");
+
+        const closeBtn = document.getElementById('lu-close-btn');
+        if (closeBtn) {
+            closeBtn.innerText = "ACCEPTER";
+            closeBtn.style.background = "#ff0033";
+        }
+        
+        const card = document.querySelector('.level-up-card');
+        if (card) {
+            card.style.borderColor = "#ff0033";
+            card.style.boxShadow = `0 0 40px rgba(255, 0, 51, 0.4)`;
+        }
+        
+        const modal = document.getElementById('level-up-modal');
+        if (modal) {
+            const mobileHeight = window.innerHeight; 
+            modal.style.height = mobileHeight + 'px';
+            modal.style.setProperty('display', 'block', 'important');
+        }
     }
 
     function showRankDownUI(rankIdx) {
-        alert("DIAGNOSTIC : Rétrogradation détectée !");
-        showLevelUpUI(rankIdx);
+        try { levelDownSound.play().catch(e => console.log("Audio bloqué")); } catch(e) {}
+        safeSetText('lu-header-title', "AVERTISSEMENT DU SYSTÈME");
+        safeSetText('lu-main-label', "RÉTROGRADATION");
+        
+        const mainLbl = document.getElementById('lu-main-label');
+        if (mainLbl) mainLbl.style.color = "#ff0033";
+        
+        const rank = RANKS[rankIdx];
+        if (!rank) return;
+
+        pendingRankColor = rank.color;
+
+        safeSetText('lu-rank-icon', rank.icon);
+        safeSetText('lu-rank-name', rank.name);
+        
+        const rName = document.getElementById('lu-rank-name');
+        if (rName) rName.style.color = "#ff0033";
+        
+        safeSetText('lu-stat-label-1', "STATUT");
+        safeSetText('stat-abstinence', "RANG INFÉRIEUR");
+        
+        const statAbs = document.getElementById('stat-abstinence');
+        if (statAbs) statAbs.style.color = "#ff0033";
+        
+        safeSetText('lu-stat-label-2', "ANCIEN RANG");
+        safeSetText('stat-prev-rank', RANKS[rankIdx + 1] ? RANKS[rankIdx + 1].name : "Inconnu");
+        
+        safeSetText('lu-stat-label-3', "MESSAGE");
+        safeSetText('stat-total-exos', "LA FORCE DIMINUE...");
+
+        const closeBtn = document.getElementById('lu-close-btn');
+        if (closeBtn) {
+            closeBtn.innerText = "REPRENDRE L'ENTRAINEMENT";
+            closeBtn.style.background = "#ff0033";
+        }
+        
+        const card = document.querySelector('.level-up-card');
+        if (card) {
+            card.style.borderColor = "#ff0033";
+            card.style.boxShadow = `0 0 40px rgba(255, 0, 51, 0.4)`;
+        }
+        
+        const modal = document.getElementById('level-up-modal');
+        if (modal) {
+            const mobileHeight = window.innerHeight; 
+            modal.style.height = mobileHeight + 'px';
+            modal.style.setProperty('display', 'block', 'important');
+        }
     }
 
     function closeLevelUp() {
         const modal = document.getElementById('level-up-modal');
         if (modal) modal.style.setProperty('display', 'none', 'important');
+
+        try {
+            if (pendingRankColor) {
+                document.documentElement.style.setProperty('--system-blue', pendingRankColor);
+            }
+        } catch (error) {
+            console.error("Erreur couleur globale :", error);
+        }
+        
+        try {
+            const statAbstinence = document.getElementById('stat-abstinence');
+            if (statAbstinence) statAbstinence.style.color = "white"; 
+        } catch (error) {
+             console.error("Erreur reset styles :", error);
+        }
+        pendingRankColor = null;
     }
 
     function checkPointDecay() {
@@ -714,7 +836,7 @@ function showLevelUpUI(rankIdx) {
     setInterval(updateTimer, 1000); 
     setInterval(checkPointDecay, 60000);
 
-    setTimeout(() => {
-    console.log("Exécution du test forcé de la modale");
-    showLevelUpUI(1); 
-}, 2000);
+//     setTimeout(() => {
+//     console.log("Exécution du test forcé de la modale");
+//     showLevelUpUI(1); 
+// }, 2000);

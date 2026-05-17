@@ -60,28 +60,32 @@
             top: 0 !important;
             left: 0 !important;
             width: 100% !important;
-            background: #090d16 !important; /* Force un fond totalement opaque (au cas où il s'affichait transparent) */
+            height: 100% !important;
+            background: rgba(9, 13, 22, 0.95) !important; /* Fond opaque pour bien isoler la modale */
+            z-index: 9999999 !important;
             box-sizing: border-box !important;
             margin: 0 !important;
-            padding: 15px !important;
-            overflow-y: auto !important; /* Permet le scroll interne si le téléphone est petit */
-            -webkit-transform: translate3d(0,0,0); /* Force l'accélération matérielle sur Chrome Mobile */
-            transform: translate3d(0,0,0);
+            padding: 0 !important;
         }
 
-        /* Assure-toi que la carte à l'intérieur ne déborde pas sur petit écran */
         .level-up-card {
-            max-width: 90%;
-            width: 400px;
-            max-height: 90vh;
-            overflow-y: auto; /* Permet de scroller dans la modale si l'écran est minuscule */
-            background: #111827; /* Ton fond sombre de carte */
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important; /* Centre parfaitement la carte horizontalement et verticalement */
+            width: 90% !important;
+            max-width: 380px !important;
+            max-height: 85vh !important; /* Évite que la carte ne sorte de l'écran sur les petits téléphones */
+            overflow-y: auto !important; /* Permet de scroller à l'intérieur de la carte si besoin */
+            background: #111827 !important;
             border: 2px solid var(--system-blue);
             border-radius: 12px;
-            padding: 24px;
+            padding: 20px;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             align-items: center;
+            text-align: center;
         }
 
         .lu-title { color: var(--system-blue); font-size: 0.8rem; letter-spacing: 5px; font-weight: 900; margin-bottom: 5px; }
