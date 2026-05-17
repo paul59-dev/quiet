@@ -14,7 +14,7 @@
             --border: rgba(255, 255, 255, 0.08);
             --system-blue: #00f2ff;
             --eveil-green: #22c55e;
-            --accent-color: #a855f7; /* Couleur violette spécifique pour la page d'infos */
+            --accent-color: #a855f7;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -30,7 +30,7 @@
             overflow-x: hidden;
         }
 
-        /* --- ANIMATIONS (MÊME STYLE GLOBAL) --- */
+        /* --- ANIMATIONS --- */
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -49,10 +49,15 @@
             gap: 20px; 
             z-index: 1; 
             animation: fadeIn 0.8s ease-out;
-            margin-top: 50px; /* Espace pour ne pas chevaucher le bouton burger */
+            margin-top: 50px;
         }
 
-        .main-content { animation: slideUp 0.8s ease-out; }
+        .main-content { 
+            animation: slideUp 0.8s ease-out; 
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
 
         /* --- BURGER BUTTON --- */
         .burger-menu {
@@ -69,7 +74,7 @@
         }
         .burger-menu:hover { border-color: var(--accent-color); }
 
-        /* --- SLIDE PANEL (OUVERTURE À DROITE CLONÉE) --- */
+        /* --- SLIDE PANEL --- */
         .about-panel {
             position: fixed;
             top: 0;
@@ -114,7 +119,7 @@
             transition: 0.2s;
         }
 
-        /* --- DESIGN DES CARTES DE LA PAGE --- */
+        /* --- DESIGN DES CARTES --- */
         .card {
             background: rgba(13, 17, 23, 0.85);
             border-radius: 12px;
@@ -123,10 +128,12 @@
             margin-bottom: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             backdrop-filter: blur(20px);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .page-title {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -143,11 +150,51 @@
             margin-bottom: 15px;
         }
 
+        .module-block {
+            margin-bottom: 25px; 
+            padding-left: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .module-block.s-sys { border-left: 2px solid var(--system-blue); }
+        .module-block.eveil-bg { border-left: 2px solid var(--eveil-green); margin-bottom: 5px; }
+        .module-block.dev-status { border-left: 2px solid var(--accent-color); margin-bottom: 5px; }
+
+        .module-title {
+            margin: 0; 
+            font-size: 1.1rem; 
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
         p {
             font-size: 0.9rem;
             line-height: 1.6;
             color: var(--text-dim);
-            margin: 0 0 15px 0;
+            margin: 0 0 12px 0;
+            text-align: justify;
+        }
+        p:last-child { margin-bottom: 0; }
+
+        strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .features-list {
+            margin: 5px 0 10px 0;
+            padding-left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .features-list li {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            line-height: 1.6;
         }
 
         .btn-panel-close { 
@@ -199,7 +246,7 @@
     <div style="width: 20px; height: 2px; background: var(--text); margin: 4px 0;"></div>
 </div>
 
-<!-- EFFET D'ARRIÈRE PLAN FLOU CLIQUEUR -->
+<!-- OVERLAY CLIQUEUR -->
 <div class="overlay" id="overlay" onclick="toggleAbout()"></div>
 
 <!-- PANNEAU COULISSANT DROIT -->
@@ -210,15 +257,12 @@
     </div>
     
     <div class="about-content">
-        <!-- Lien vers S-System -->
         <a href="../index.html" style="color: #fff;" class="menu-link">
             1. S-SYSTEM (Principal)
         </a>
-        <!-- Lien vers Eveil -->
         <a href="../eveilGestion/gestion.html" style="color: #fff;" class="menu-link">
             2. ÉVEIL BUDGET
         </a>
-        <!-- Lien actif (Page À Propos actuelle) -->
         <a href="apropos.html" style="color: var(--accent-color); font-weight: bold; border-left: 3px solid var(--accent-color); padding-left: 10px;" class="menu-link">
             3. À PROPOS / INFOS ✔
         </a>
@@ -231,34 +275,60 @@
 <div class="container">
     <div class="main-content">
         
-        <!-- CARTE 1 : PRÉPARATION -->
+        <!-- CARTE 1 : INTRODUCTION -->
         <div class="card">
-            <div class="section-subtitle">Informations générales</div>
-            <h1 class="page-title">À Propos du Projet</h1>
-            <p>Bienvenue sur votre écosystème applicatif personnel. Cet ensemble d'outils est conçu pour centraliser la gestion de vos objectifs, le suivi de vos routines quotidiennes, ainsi que le contrôle rigoureux de vos finances.</p>
-            <p>Chaque brique de l'application fonctionne de manière autonome tout en conservant une identité visuelle commune, sombre, futuriste et optimisée pour une navigation rapide.</p>
+            <div class="section-subtitle">Guide de l'utilisateur</div>
+            <h1 class="page-title">Comment utiliser l'application ?</h1>
+            <p>Bienvenue dans l'écosystème <strong>Éveil</strong>. Cette interface se divise en deux modules majeurs qui <strong>fonctionnent de manière totalement indépendante</strong>. Vous êtes libre d'utiliser le suivi sportif, la gestion budgétaire, ou les deux en même temps selon vos objectifs quotidiens.</p>
+            <p>L'application est conçue pour respecter votre vie privée : <strong>aucune donnée personnelle n'est collectée</strong>, vous gardez le contrôle absolu sur votre progression.</p>
         </div>
 
-        <!-- CARTE 2 : DÉTAILS DES MODULES -->
+        <!-- CARTE 2 : MODE D'EMPLOI DES MODULES -->
         <div class="card">
-            <div class="section-subtitle">Architecture de l'écosystème</div>
-            <h2 style="margin: 0 0 15px 0; font-weight: 800; font-size: 1.3rem;">Les Modules Disponibles</h2>
+            <div class="section-subtitle">Instructions de terrain</div>
+            <h2 style="margin: 0 0 20px 0; font-weight: 800; font-size: 1.3rem;">Fonctionnement des Modules</h2>
             
-            <div style="margin-bottom: 20px; border-left: 2px solid var(--system-blue); padding-left: 15px;">
-                <h3 style="margin: 0 0 5px 0; font-size: 1rem; color: var(--system-blue);">1. S-SYSTEM</h3>
-                <p style="margin: 0;">Inspiré des mécaniques de RPG, ce module gère le suivi de votre discipline physique, vos entraînements et vos paliers d'évolution sous forme de points d'expérience (LP).</p>
+            <!-- MODE D'EMPLOI S-SYSTEM -->
+            <div class="module-block s-sys">
+                <h3 class="module-title" style="color: var(--system-blue);">1. Module S-SYSTEM (Sport & Discipline)</h3>
+                <p>Ce module suit vos actions et fait monter votre **Rang Hunter** global (de E à S) grâce à vos points accumulés.</p>
+                <ul class="features-list">
+                    <li><strong>Sélectionnez votre mode :</strong> Basculez entre les catégories (Haut, Bas, Maison, Bonus) pour afficher les exercices correspondants.</li>
+                    <li><strong>Validez vos performances :</strong> Entrez vos répétitions ou vos charges en kg pour chaque exercice effectué, puis validez. Chaque action enregistrée augmente immédiatement vos points de puissance.</li>
+                    <li><strong>Maintenez l'Abstinence :</strong> Un compteur est lancé sur une mauvaise habitude à éliminer (ex: fast-food) et tenez bon pour protéger vos acquis. Si vous craquez, jouez le jeu : assumez le <em>Reset</em>, repartez à zéro et recommencez plus fort !</li>
+                    <li><strong>Montez en Rang :</strong> Atteignez les paliers requis (100, 300, 600, 1200 ou 2500 points) pour déclencher l'alerte sonore de *Level Up* et débloquer un nouveau grade visuel.</li>
+                </ul>
             </div>
 
-            <div style="margin-bottom: 5px; border-left: 2px solid var(--eveil-green); padding-left: 15px;">
-                <h3 style="margin: 0 0 5px 0; font-size: 1rem; color: var(--eveil-green);">2. ÉVEIL BUDGET</h3>
-                <p style="margin: 0;">Une interface épurée dédiée à la gestion financière. Elle vous permet de piloter vos revenus, de catégoriser vos dépenses récurrentes, et de sécuriser votre épargne.</p>
+            <!-- MODE D'EMPLOI ÉVEIL BUDGET -->
+            <div class="module-block eveil-bg">
+                <h3 class="module-title" style="color: var(--eveil-green);">2. Module ÉVEIL BUDGET (Gestion Financière)</h3>
+                <p>Ce module synchronise votre santé financière réelle avec un système de rang évolutif basé sur votre fortune.</p>
+                <ul class="features-list">
+                    <li><strong>Configurez votre mois :</strong> Renseignez vos revenus, vos charges fixes et vos objectifs d'épargne en début de mois. Le système calcule instantanément votre <strong>Trésorerie Mana</strong> (votre reste à vivre net).</li>
+                    <li><strong>Consultez votre Mana Journalier :</strong> Regardez cette jauge chaque jour. Elle vous indique le montant exact que vous avez le droit de dépenser quotidiennement pour finir le mois à l'équilibre. Elle se recalcule automatiquement.</li>
+                    <li><strong>Alimentez le Coffre :</strong> Ajustez manuellement ou laissez le système cumuler vos réserves dans le <strong>Coffre d'Épargne</strong> pour sécuriser votre avenir.</li>
+                    <li><strong>Surveillez la jauge de Rang :</strong> Votre fortune totale détermine votre niveau financier (du Rang F au Rang S). La barre de progression vous indique en temps réel la somme exacte à acquérir pour passer au palier supérieur.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CARTE 3 : STATUT DU SYSTÈME & VERSION (NOUVELLE CASE) -->
+        <div class="card">
+            <div class="section-subtitle">Journal des modifications</div>
+            <h2 style="margin: 0 0 20px 0; font-weight: 800; font-size: 1.3rem;">Statut du Système & Mises à jour</h2>
+            
+            <div class="module-block dev-status">
+                <h3 class="module-title" style="color: var(--accent-color);">Écosystème Global : ÉVEIL — v2.4</h3>
+                <p>L'application globale, baptisée <strong>Éveil</strong>, est actuellement déployée en <strong>version 2.4</strong>.</p>
+                <p>Le projet est <strong>toujours en cours de développement actif</strong>. Le Système continue d'évoluer en continu : de nouvelles fonctionnalités, des optimisations de performances et des idées inédites de gamification sont régulièrement intégrées pour perfectionner votre expérience de suivi de la discipline.</p>
             </div>
         </div>
 
     </div>
 </div>
 
-<!-- SCRIPT DE NAVIGATION SYNCHRONISÉ -->
+<!-- SCRIPT DE NAVIGATION -->
 <script>
     function toggleAbout() {
         const panel = document.getElementById('about-panel');
@@ -270,7 +340,6 @@
         }
     }
 
-    // Double sécurité au cas où un ancien lien appelle toggleMenu()
     function toggleMenu() {
         toggleAbout();
     }
