@@ -675,52 +675,104 @@
         }
 
         const dayData = state.sportHistory[t];
-        const index = dayData.list.indexOf(exoID);
+        if (!dayData.details) dayData.details = {};
 
+        const index = dayData.list.indexOf(exoID);
         const currentMode = exoID.split('-')[0];
         const exoIndex = parseInt(exoID.split('-')[1]);
         const exoConfig = EXOS[currentMode][exoIndex];
 
         let pointsGagnes = 0;
+        let currentReps = "";
 
         if (exoConfig.hasReps === false) {
             pointsGagnes = 5; 
         } else {
             const repInput = document.getElementById(`rep-${exoID}`);
-            pointsGagnes = repInput ? (parseInt(repInput.value) || 0) : 10;
+            currentReps = repInput ? (parseInt(repInput.value) || 0) : 10;
+            pointsGagnes = currentReps; // 1 rep = 1 LP
         }
 
-        // Calcul des points en local avant modification du state
-        let pointsCalculatiens = state.points;
+        let pointsCalculations = state.points;
 
         if (index === -1) {
+            // ON COCHE
             dayData.list.push(exoID);
-            pointsCalculatiens += pointsGagnes;
+            pointsCalculations += pointsGagnes;
+
+            // On initialise l'objet s'il n'existe pas
+            if (!dayData.details[exoID]) dayData.details[exoID] = {};
+            
+            // On mémorise les points ET les reps exacts au moment du clic
+            dayData.details[exoID].points = pointsGagnes;
+            if (exoConfig.hasReps !== false) {
+                dayData.details[exoID].reps = currentReps;
+            }
         } else {
+            // ON DÉCOCHE
             dayData.list.splice(index, 1);
-            pointsCalculatiens = Math.max(0, pointsCalculatiens - pointsGagnes);
+            
+            // On retire EXACTEMENT ce qui avait été accumulé
+            const pointsALesquelsOnRenonce = (dayData.details[exoID] && dayData.details[exoID].points !== undefined) 
+                ? dayData.details[exoID].points 
+                : pointsGagnes;
+                
+            pointsCalculations = Math.max(0, pointsCalculations - pointsALesquelsOnRenonce);
+            
+            // On nettoie proprement
+            delete dayData.details[exoID];
         }
 
-        // Application au state global
-        state.points = pointsCalculatiens;
+        state.points = pointsCalculations;
 
-        // --- ENREGISTREMENT SÛR DE LA COULEUR DANS L'HISTORIQUE ---
-        // On reproduit exactement la même logique robuste que ton checkLevelUp
+        // Recalcul de la couleur du jour
         let calculatedRankIdx = 0;
-        RANKS.forEach((r, i) => { if (pointsCalculatiens >= r.min) calculatedRankIdx = i; });
-        
-        const updatedColor = RANKS[calculatedRankIdx]?.color || "#94a3b8";
-        dayData.color = updatedColor;
+        RANKS.forEach((r, i) => { if (pointsCalculations >= r.min) calculatedRankIdx = i; });
+        dayData.color = RANKS[calculatedRankIdx]?.color || "#94a3b8";
 
-        // On sauvegarde une seule fois ici, maintenant que les points ET la couleur du jour sont prêts
         save();
 
-        // Mise à jour immédiate des composants visuels de base
         updateUI();
         renderExos();
         if (typeof renderCalendar === 'function') renderCalendar();
 
-        // Analyse du changement de niveau (avec un micro-délai sécurisé pour le rendu mobile)
+        setTimeout(() => {
+            checkLevelUp(state.points);
+        }, 30);
+    }
+
+    function handleRepChange(exoID) {
+        const t = getT();
+        // Si l'exercice n'est pas coché, on s'en fiche, on ne fait rien
+        if (!state.sportHistory[t] || !state.sportHistory[t].list.includes(exoID)) return;
+
+        const dayData = state.sportHistory[t];
+        const repInput = document.getElementById(`rep-${exoID}`);
+        const nouvellesReps = repInput ? (parseInt(repInput.value) || 0) : 10;
+
+        // On récupère ce que l'exercice avait donné comme points précédemment
+        const anciensPoints = dayData.details[exoID] || 0;
+
+        // Si le nombre n'a pas changé, on stoppe
+        if (nouvellesReps === anciensPoints) return;
+
+        // On ajuste le total global des points (on retire les anciens, on ajoute les nouveaux)
+        state.points = Math.max(0, state.points - anciensPoints + nouvellesReps);
+
+        // On met à jour la mémoire de cet exercice précis
+        dayData.details[exoID] = nouvellesReps;
+
+        // On recalcule la couleur globale du jour
+        let calculatedRankIdx = 0;
+        RANKS.forEach((r, i) => { if (state.points >= r.min) calculatedRankIdx = i; });
+        dayData.color = RANKS[calculatedRankIdx]?.color || "#94a3b8";
+
+        // Sauvegarde et mise à jour de l'écran
+        save();
+        updateUI();
+        if (typeof renderCalendar === 'function') renderCalendar();
+
+        // On vérifie si ça déclenche un Level Up ou Level Down !
         setTimeout(() => {
             checkLevelUp(state.points);
         }, 30);
@@ -731,22 +783,48 @@
         if (!state.sportHistory[t]) {
             state.sportHistory[t] = { list: [], details: {}, color: getCurrentRankColor() };
         }
-        if (!state.sportHistory[t].details[exoID]) {
-            state.sportHistory[t].details[exoID] = {};
+        
+        const dayData = state.sportHistory[t];
+        if (!dayData.details) dayData.details = {};
+        if (!dayData.details[exoID]) dayData.details[exoID] = {};
+
+        // 1. Récupération des éléments du DOM
+        const repInput = document.getElementById(`rep-${exoID}`);
+        const kg1Input = document.getElementById(`kg-${exoID}-1`);
+        const kg2Input = document.getElementById(`kg-${exoID}-2`);
+        const kg3Input = document.getElementById(`kg-${exoID}-3`);
+
+        // 2. Sauvegarde des valeurs dans les détails
+        if (repInput) dayData.details[exoID].reps = parseInt(repInput.value) || 0;
+        if (kg1Input) dayData.details[exoID].kg1 = kg1Input.value;
+        if (kg2Input) dayData.details[exoID].kg2 = kg2Input.value;
+        if (kg3Input) dayData.details[exoID].kg3 = kg3Input.value;
+
+        // 3. AJUSTEMENT DYNAMIQUE DES LP (Si l'exercice est coché)
+        if (dayData.list.includes(exoID)) {
+            const nouvellesReps = repInput ? (parseInt(repInput.value) || 0) : 10;
+            const anciensPoints = dayData.details[exoID].points !== undefined ? dayData.details[exoID].points : 10;
+
+            // Si la valeur a changé, on applique la différence au total global
+            if (nouvellesReps !== anciensPoints) {
+                state.points = Math.max(0, state.points - anciensPoints + nouvellesReps);
+                dayData.details[exoID].points = nouvellesReps; // Met à jour la mémoire locale de l'exo
+                
+                // Recalcul de la couleur du jour
+                let calculatedRankIdx = 0;
+                RANKS.forEach((r, i) => { if (state.points >= r.min) calculatedRankIdx = i; });
+                dayData.color = RANKS[calculatedRankIdx]?.color || "#94a3b8";
+            }
         }
 
-        const repInput = document.getElementById(`rep-${exoID}`);
-        if (repInput) state.sportHistory[t].details[exoID].reps = parseInt(repInput.value) || 0;
-
-        const kg1 = document.getElementById(`kg-${exoID}-1`);
-        const kg2 = document.getElementById(`kg-${exoID}-2`);
-        const kg3 = document.getElementById(`kg-${exoID}-3`);
-
-        if (kg1) state.sportHistory[t].details[exoID].kg1 = kg1.value;
-        if (kg2) state.sportHistory[t].details[exoID].kg2 = kg2.value;
-        if (kg3) state.sportHistory[t].details[exoID].kg3 = kg3.value;
-
         save();
+        updateUI(); // Met à jour le compteur LP et la barre de progression immédiatement à l'écran
+        if (typeof renderCalendar === 'function') renderCalendar();
+
+        // Vérifie en direct si le changement de chiffre provoque un Level Up ou Level Down
+        setTimeout(() => {
+            checkLevelUp(state.points);
+        }, 30);
     }
 
     function renderCalendar() {
